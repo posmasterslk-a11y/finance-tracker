@@ -15,6 +15,7 @@ type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {},
 
 
 export const DebtModal: typeof import("../components/DebtModal.vue")['default']
+export const ManageTypesModal: typeof import("../components/ManageTypesModal.vue")['default']
 export const SubscriptionModal: typeof import("../components/SubscriptionModal.vue")['default']
 export const TransactionModal: typeof import("../components/TransactionModal.vue")['default']
 export const NuxtWelcome: typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']
@@ -41,6 +42,7 @@ export const Html: typeof import("../node_modules/nuxt/dist/head/runtime/compone
 export const Body: typeof import("../node_modules/nuxt/dist/head/runtime/components")['Body']
 export const NuxtIsland: typeof import("../node_modules/nuxt/dist/app/components/nuxt-island")['default']
 export const LazyDebtModal: LazyComponent<typeof import("../components/DebtModal.vue")['default']>
+export const LazyManageTypesModal: LazyComponent<typeof import("../components/ManageTypesModal.vue")['default']>
 export const LazySubscriptionModal: LazyComponent<typeof import("../components/SubscriptionModal.vue")['default']>
 export const LazyTransactionModal: LazyComponent<typeof import("../components/TransactionModal.vue")['default']>
 export const LazyNuxtWelcome: LazyComponent<typeof import("../node_modules/nuxt/dist/app/components/welcome.vue")['default']>

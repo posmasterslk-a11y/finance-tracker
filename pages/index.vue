@@ -333,7 +333,7 @@ const updateCharts = () => {
   const generatePieData = (txs, typeFilter) => {
     const grouped = {}
     txs.filter(t => t.type === typeFilter).forEach(t => {
-      const label = getBaseLabel(t.description)
+      const label = typeFilter === 'income' ? (t.main_type || 'Other Income') : getBaseLabel(t.description)
       grouped[label] = (grouped[label] || 0) + t.amount
     })
     
@@ -365,7 +365,7 @@ const updateCharts = () => {
     const month = new Date(t.date).getMonth()
     overallMonthlyTotals[month] += t.amount
 
-    const label = getBaseLabel(t.description)
+    const label = t.main_type || 'Other Income'
     if (!labelMonthlyTotals[label]) {
       labelMonthlyTotals[label] = Array(12).fill(0)
     }

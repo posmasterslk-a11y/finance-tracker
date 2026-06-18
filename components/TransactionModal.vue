@@ -23,8 +23,19 @@
           <small v-if="form.type === 'income'" style="color: var(--success); font-size: 0.75rem;">Income always goes to Office</small>
         </div>
 
+        <div v-if="form.type === 'income'">
+          <label>Main Revenue Type</label>
+          <select v-model="form.main_type" required>
+            <option value="Content Revenue">Content Revenue</option>
+            <option value="Software Revenue">Software Revenue</option>
+          </select>
+        </div>
+
         <div>
-          <label>Label / Source</label>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+            <label style="margin-bottom: 0;">Label / Source</label>
+            <button type="button" @click="isManageTypesOpen = true" style="background: transparent; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Manage Types</button>
+          </div>
           <div v-if="loadingTypes" style="font-size: 0.9rem; color: var(--text-secondary);">Loading custom types...</div>
           <select v-else-if="availableTypes.length > 0" v-model="form.transactionLabel" required>
             <option value="" disabled>Select {{ form.type }} source...</option>
@@ -80,10 +91,19 @@
         <p v-if="errorMsg" class="text-danger">{{ errorMsg }}</p>
       </form>
     </div>
+
+    <!-- Manage Types Modal overlay -->
+    <ManageTypesModal 
+      :is-open="isManageTypesOpen" 
+      @close="isManageTypesOpen = false" 
+      @updated="fetchTransactionTypes" 
+    />
   </div>
 </template>
 
 <script setup>
+import ManageTypesModal from './ManageTypesModal.vue'
+
 const props = defineProps({
   isOpen: Boolean,
   forcedCategory: {
@@ -107,6 +127,7 @@ const form = ref({
   currency: 'LKR',
   amount: '',
   exchange_rate: '',
+  main_type: 'Content Revenue',
   transactionLabel: '',
   notes: '',
   date: new Date().toISOString().split('T')[0]
@@ -115,6 +136,7 @@ const form = ref({
 const customLabel = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
+const isManageTypesOpen = ref(false)
 
 const calculatedLkrAmount = computed(() => {
   if (!form.value.amount) return 0
@@ -155,6 +177,7 @@ watch(() => props.isOpen, async (newVal) => {
       form.value.currency = props.editData.currency || 'LKR'
       form.value.amount = props.editData.currency === 'USD' ? props.editData.original_amount : props.editData.amount
       form.value.exchange_rate = props.editData.exchange_rate || ''
+      form.value.main_type = props.editData.main_type || 'Content Revenue'
       form.value.date = props.editData.date
       
       // Attempt to split description back into label and notes
@@ -224,6 +247,7 @@ const closeModal = () => {
     currency: 'LKR',
     amount: '',
     exchange_rate: '',
+    main_type: 'Content Revenue',
     transactionLabel: '',
     notes: '',
     date: new Date().toISOString().split('T')[0]
@@ -254,6 +278,7 @@ const submitForm = async () => {
     currency: form.value.currency,
     original_amount: parseFloat(form.value.amount),
     exchange_rate: form.value.currency === 'USD' ? parseFloat(form.value.exchange_rate) : null,
+    main_type: form.value.type === 'income' ? form.value.main_type : null,
     description: finalDescription,
     date: form.value.date
   }
@@ -266,6 +291,15 @@ const submitForm = async () => {
   } else {
     const { error } = await supabase.from('transactions').insert(payload)
     dbError = error
+    
+    // Save new custom type to transaction_types for future use
+    if (!dbError && (form.value.transactionLabel === 'Other' || !form.value.transactionLabel) && customLabel.value) {
+      await supabase.from('transaction_types').insert({
+        user_id: user.value.id,
+        type: form.value.type,
+        name: customLabel.value
+      })
+    }
   }
 
   loading.value = false
