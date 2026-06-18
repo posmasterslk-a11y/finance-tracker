@@ -198,11 +198,15 @@ const saveEdit = async (t) => {
     return
   }
 
-  // 2. Update all old transactions that used this name
+  // Close the edit box and refresh the types list immediately
+  editingId.value = null
+  fetchTypes()
+
+  // 2. Update all old transactions that used this name (in background concurrently)
   const { data: txs } = await supabase.from('transactions').select('id, description').eq('user_id', user.value.id).like('description', `${t.name}%`)
   
   if (txs && txs.length > 0) {
-    for (const tx of txs) {
+    const updatePromises = txs.map(tx => {
       let newDesc = tx.description
       if (newDesc === t.name) {
         newDesc = newName
@@ -220,13 +224,15 @@ const saveEdit = async (t) => {
       }
 
       if (Object.keys(updateObj).length > 0) {
-        await supabase.from('transactions').update(updateObj).eq('id', tx.id)
+        return supabase.from('transactions').update(updateObj).eq('id', tx.id)
       }
+      return null
+    }).filter(p => p !== null)
+
+    if (updatePromises.length > 0) {
+      await Promise.all(updatePromises)
     }
   }
-
-  editingId.value = null
-  fetchTypes()
 }
 
 onMounted(() => {
