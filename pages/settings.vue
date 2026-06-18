@@ -176,7 +176,10 @@ const startEdit = (t) => {
 const saveEdit = async (t) => {
   const newName = editName.value.trim()
   if (!newName) return
-  if (newName === t.name) {
+  
+  const mainTypeChanged = t.type === 'income' && editMainType.value !== t.main_type
+  
+  if (newName === t.name && !mainTypeChanged) {
     editingId.value = null
     return
   }
@@ -188,7 +191,9 @@ const saveEdit = async (t) => {
     name: newName, 
     main_type: t.type === 'income' ? editMainType.value : null 
   }).eq('id', t.id)
+  
   if (typeError) {
+    alert("Error saving type: " + typeError.message)
     loading.value = false
     return
   }
