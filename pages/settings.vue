@@ -130,7 +130,10 @@ const fetchTypes = async () => {
     .eq('user_id', user.value.id)
     .order('name')
   
-  if (data) types.value = data
+  if (data) {
+    console.log("fetchTypes returned:", data)
+    types.value = data
+  }
   loading.value = false
 }
 
@@ -174,29 +177,38 @@ const startEdit = (t) => {
 }
 
 const saveEdit = async (t) => {
+  console.log("saveEdit called for:", t.name)
   const newName = editName.value.trim()
   if (!newName) return
   
   const mainTypeChanged = t.type === 'income' && editMainType.value !== t.main_type
+  console.log("newName:", newName, "mainTypeChanged:", mainTypeChanged)
   
   if (newName === t.name && !mainTypeChanged) {
+    console.log("No changes detected, returning early.")
     editingId.value = null
     return
   }
 
   loading.value = true
   
+  console.log("Updating transaction_types...")
   // 1. Update the type in transaction_types
-  const { error: typeError } = await supabase.from('transaction_types').update({ 
+  const { data: updatedData, error: typeError } = await supabase.from('transaction_types').update({ 
     name: newName, 
     main_type: t.type === 'income' ? editMainType.value : null 
-  }).eq('id', t.id)
+  }).eq('id', t.id).select()
+  
+  console.log("Returned data from update:", updatedData)
   
   if (typeError) {
+    console.error("typeError:", typeError)
     alert("Error saving type: " + typeError.message)
     loading.value = false
     return
   }
+
+  console.log("transaction_types updated! Closing edit box.")
 
   // Close the edit box and refresh the types list immediately
   editingId.value = null
