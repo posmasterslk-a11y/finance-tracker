@@ -32,10 +32,7 @@
         </div>
 
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-            <label style="margin-bottom: 0;">Label / Source</label>
-            <button type="button" @click="isManageTypesOpen = true" style="background: transparent; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; text-decoration: underline;">Manage Types</button>
-          </div>
+          <label>Label / Source</label>
           <div v-if="loadingTypes" style="font-size: 0.9rem; color: var(--text-secondary);">Loading custom types...</div>
           <select v-else-if="availableTypes.length > 0" v-model="form.transactionLabel" required>
             <option value="" disabled>Select {{ form.type }} source...</option>
@@ -91,19 +88,10 @@
         <p v-if="errorMsg" class="text-danger">{{ errorMsg }}</p>
       </form>
     </div>
-
-    <!-- Manage Types Modal overlay -->
-    <ManageTypesModal 
-      :is-open="isManageTypesOpen" 
-      @close="isManageTypesOpen = false" 
-      @updated="fetchTransactionTypes" 
-    />
   </div>
 </template>
 
 <script setup>
-import ManageTypesModal from './ManageTypesModal.vue'
-
 const props = defineProps({
   isOpen: Boolean,
   forcedCategory: {
@@ -136,7 +124,6 @@ const form = ref({
 const customLabel = ref('')
 const loading = ref(false)
 const errorMsg = ref('')
-const isManageTypesOpen = ref(false)
 
 const calculatedLkrAmount = computed(() => {
   if (!form.value.amount) return 0

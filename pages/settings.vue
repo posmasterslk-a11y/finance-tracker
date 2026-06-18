@@ -27,10 +27,24 @@
           </div>
           <ul v-else style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem;">
             <li v-for="type in incomeTypes" :key="type.id" class="type-item">
-              <span>{{ type.name }}</span>
-              <button @click="deleteType(type.id)" class="btn-delete" title="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
+              <template v-if="editingId === type.id">
+                <input type="text" v-model="editName" style="flex: 1; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;" />
+                <div style="display: flex; gap: 0.25rem;">
+                  <button @click="saveEdit(type)" style="background: var(--primary); border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Save</button>
+                  <button @click="editingId = null" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Cancel</button>
+                </div>
+              </template>
+              <template v-else>
+                <span>{{ type.name }}</span>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button @click="startEdit(type)" class="btn-edit" title="Edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button @click="deleteType(type.id)" class="btn-delete" title="Delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </template>
             </li>
           </ul>
         </div>
@@ -53,10 +67,24 @@
           </div>
           <ul v-else style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem;">
             <li v-for="type in expenseTypes" :key="type.id" class="type-item">
-              <span>{{ type.name }}</span>
-              <button @click="deleteType(type.id)" class="btn-delete" title="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
+              <template v-if="editingId === type.id">
+                <input type="text" v-model="editName" style="flex: 1; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;" />
+                <div style="display: flex; gap: 0.25rem;">
+                  <button @click="saveEdit(type)" style="background: var(--primary); border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Save</button>
+                  <button @click="editingId = null" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Cancel</button>
+                </div>
+              </template>
+              <template v-else>
+                <span>{{ type.name }}</span>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button @click="startEdit(type)" class="btn-edit" title="Edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button @click="deleteType(type.id)" class="btn-delete" title="Delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </template>
             </li>
           </ul>
         </div>
@@ -110,8 +138,56 @@ const addType = async (categoryType) => {
 }
 
 const deleteType = async (id) => {
+  if (!confirm('Are you sure you want to delete this type?')) return
   const { error } = await supabase.from('transaction_types').delete().eq('id', id)
   if (!error) fetchTypes()
+}
+
+const editingId = ref(null)
+const editName = ref('')
+
+const startEdit = (t) => {
+  editingId.value = t.id
+  editName.value = t.name
+}
+
+const saveEdit = async (t) => {
+  const newName = editName.value.trim()
+  if (!newName) return
+  if (newName === t.name) {
+    editingId.value = null
+    return
+  }
+
+  loading.value = true
+  
+  // 1. Update the type in transaction_types
+  const { error: typeError } = await supabase.from('transaction_types').update({ name: newName }).eq('id', t.id)
+  if (typeError) {
+    loading.value = false
+    return
+  }
+
+  // 2. Update all old transactions that used this name
+  const { data: txs } = await supabase.from('transactions').select('id, description').eq('user_id', user.value.id).like('description', `${t.name}%`)
+  
+  if (txs && txs.length > 0) {
+    for (const tx of txs) {
+      let newDesc = tx.description
+      if (newDesc === t.name) {
+        newDesc = newName
+      } else if (newDesc.startsWith(`${t.name} - `)) {
+        newDesc = newDesc.replace(`${t.name} - `, `${newName} - `)
+      }
+      
+      if (newDesc !== tx.description) {
+        await supabase.from('transactions').update({ description: newDesc }).eq('id', tx.id)
+      }
+    }
+  }
+
+  editingId.value = null
+  fetchTypes()
 }
 
 onMounted(() => {
@@ -130,7 +206,7 @@ onMounted(() => {
   font-size: 0.9rem;
 }
 
-.btn-delete {
+.btn-delete, .btn-edit {
   background: none;
   border: none;
   color: var(--text-secondary);
@@ -143,7 +219,7 @@ onMounted(() => {
   transition: all 0.2s;
 }
 
-.btn-delete:hover {
+.btn-delete:hover, .btn-edit:hover {
   color: var(--danger);
   background: rgba(255, 99, 132, 0.1);
 }
