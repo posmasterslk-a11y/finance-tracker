@@ -69,14 +69,23 @@
       </div>
 
       <!-- Income Analytics (New) -->
-      <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Income Analytics</h2>
+      <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Income Analytics (Year to Date)</h2>
       <div class="dashboard-charts" style="margin-bottom: 2rem;">
-        <!-- Trend Line -->
+        <!-- Content Trend -->
         <div class="glass-panel" style="padding: 1.5rem;">
-          <h3 style="margin-bottom: 0.5rem;">Income Trend (Year to Date)</h3>
+          <h3 style="margin-bottom: 0.5rem;">Content Revenue Trend</h3>
           <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Monthly income starting from January</p>
-          <Line v-if="chartDataLoaded" :data="incomeTrendChartData" :options="lineChartOptions" style="max-height: 300px;" />
+          <Line v-if="chartDataLoaded" :data="contentTrendChartData" :options="lineChartOptions" style="max-height: 300px;" />
         </div>
+        <!-- Software Trend -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+          <h3 style="margin-bottom: 0.5rem;">Software Revenue Trend</h3>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Monthly income starting from January</p>
+          <Line v-if="chartDataLoaded" :data="softwareTrendChartData" :options="lineChartOptions" style="max-height: 300px;" />
+        </div>
+      </div>
+
+      <div class="dashboard-charts" style="margin-bottom: 2rem;">
         <!-- MoM Comparison -->
         <div class="glass-panel" style="padding: 1.5rem;">
           <h3 style="margin-bottom: 0.5rem;">This Month vs Last Month</h3>
@@ -209,7 +218,8 @@ const barChartData = ref({ labels: [], datasets: [] })
 const pieChartData = ref({ labels: [], datasets: [] })
 const incomeTypeBreakdownData = ref({ labels: [], datasets: [{ data: [] }] })
 const expenseTypeBreakdownData = ref({ labels: [], datasets: [{ data: [] }] })
-const incomeTrendChartData = ref({ labels: [], datasets: [] })
+const contentTrendChartData = ref({ labels: [], datasets: [] })
+const softwareTrendChartData = ref({ labels: [], datasets: [] })
 const momChartData = ref({ labels: [], datasets: [] })
 const momPercentage = ref(0)
 
@@ -354,47 +364,54 @@ const updateCharts = () => {
   incomeTypeBreakdownData.value = generatePieData(transactions.value, 'income')
   expenseTypeBreakdownData.value = generatePieData(transactions.value, 'expense')
 
-  // Trend Line Chart Data (Broken down by Type)
+  // Trend Line Chart Data (Broken down by Main Type -> Types)
   const currentMonthIndex = now.getMonth()
   const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   
-  const labelMonthlyTotals = {}
-  const overallMonthlyTotals = Array(12).fill(0)
+  const contentMonthlyTotals = {}
+  const softwareMonthlyTotals = {}
 
   ytdIncome.value.forEach(t => {
     const month = new Date(t.date).getMonth()
-    overallMonthlyTotals[month] += t.amount
-
-    const label = t.main_type || 'Other Income'
-    if (!labelMonthlyTotals[label]) {
-      labelMonthlyTotals[label] = Array(12).fill(0)
-    }
-    labelMonthlyTotals[label][month] += t.amount
-  })
-  
-  const lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308', '#ef4444']
-  
-  const lineDatasets = Object.keys(labelMonthlyTotals).map((label, index) => {
-    const color = lineColors[index % lineColors.length]
-    return {
-      label: label,
-      borderColor: color,
-      backgroundColor: color,
-      fill: false,
-      data: labelMonthlyTotals[label].slice(0, currentMonthIndex + 1),
-      tension: 0.4
+    const label = getBaseLabel(t.description)
+    
+    if (t.main_type === 'Content Revenue') {
+      if (!contentMonthlyTotals[label]) contentMonthlyTotals[label] = Array(12).fill(0)
+      contentMonthlyTotals[label][month] += t.amount
+    } else if (t.main_type === 'Software Revenue') {
+      if (!softwareMonthlyTotals[label]) softwareMonthlyTotals[label] = Array(12).fill(0)
+      softwareMonthlyTotals[label][month] += t.amount
+    } else {
+      // Put any uncategorized or missing main_type into Content by default or a mixed chart
+      if (!contentMonthlyTotals[label]) contentMonthlyTotals[label] = Array(12).fill(0)
+      contentMonthlyTotals[label][month] += t.amount
     }
   })
   
-  incomeTrendChartData.value = {
+  const lineColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308', '#ef4444', '#14b8a6', '#f43f5e']
+  
+  const buildLineDatasets = (monthlyTotalsObj) => {
+    return Object.keys(monthlyTotalsObj).map((label, index) => {
+      const color = lineColors[index % lineColors.length]
+      return {
+        label: label,
+        borderColor: color,
+        backgroundColor: color,
+        fill: false,
+        data: monthlyTotalsObj[label].slice(0, currentMonthIndex + 1),
+        tension: 0.4
+      }
+    })
+  }
+  
+  contentTrendChartData.value = {
     labels: monthLabels.slice(0, currentMonthIndex + 1),
-    datasets: lineDatasets.length > 0 ? lineDatasets : [{
-      label: 'Income',
-      borderColor: '#10b981',
-      backgroundColor: 'rgba(16, 185, 129, 0.2)',
-      fill: true,
-      data: overallMonthlyTotals.slice(0, currentMonthIndex + 1)
-    }]
+    datasets: buildLineDatasets(contentMonthlyTotals)
+  }
+
+  softwareTrendChartData.value = {
+    labels: monthLabels.slice(0, currentMonthIndex + 1),
+    datasets: buildLineDatasets(softwareMonthlyTotals)
   }
 
   // Month over Month Chart Data
