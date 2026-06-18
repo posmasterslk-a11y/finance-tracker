@@ -136,7 +136,17 @@ const transactionTypes = ref([])
 const loadingTypes = ref(false)
 
 const availableTypes = computed(() => {
-  return transactionTypes.value.filter(t => t.type === form.value.type)
+  let types = transactionTypes.value.filter(t => t.type === form.value.type)
+  if (form.value.type === 'income' && form.value.main_type) {
+    types = types.filter(t => !t.main_type || t.main_type === form.value.main_type)
+  }
+  return types
+})
+
+watch(() => form.value.main_type, () => {
+  if (!props.editData) {
+    form.value.transactionLabel = ''
+  }
 })
 
 const fetchTransactionTypes = async () => {

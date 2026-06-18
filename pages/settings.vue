@@ -17,6 +17,10 @@
           </h4>
           
           <form @submit.prevent="addType('income')" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <select v-model="newIncomeMainType" required style="padding: 0.5rem; border-radius: 8px; background: var(--bg-card); color: var(--text); border: 1px solid rgba(255,255,255,0.1);">
+              <option value="Content Revenue">Content</option>
+              <option value="Software Revenue">Software</option>
+            </select>
             <input type="text" v-model="newIncomeType" placeholder="e.g., SLT Revenue" required style="flex: 1;" />
             <button type="submit" class="btn btn-primary">+</button>
           </form>
@@ -28,6 +32,10 @@
           <ul v-else style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem;">
             <li v-for="type in incomeTypes" :key="type.id" class="type-item">
               <template v-if="editingId === type.id">
+                <select v-model="editMainType" style="padding: 0.25rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;">
+                  <option value="Content Revenue">Content</option>
+                  <option value="Software Revenue">Software</option>
+                </select>
                 <input type="text" v-model="editName" style="flex: 1; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;" />
                 <div style="display: flex; gap: 0.25rem;">
                   <button @click="saveEdit(type)" style="background: var(--primary); border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Save</button>
@@ -35,7 +43,12 @@
                 </div>
               </template>
               <template v-else>
-                <span>{{ type.name }}</span>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span>{{ type.name }}</span>
+                  <span v-if="type.main_type" style="font-size: 0.65rem; background: rgba(255,255,255,0.1); padding: 0.1rem 0.4rem; border-radius: 12px; color: var(--text-secondary);">
+                    {{ type.main_type === 'Content Revenue' ? 'Content' : 'Software' }}
+                  </span>
+                </div>
                 <div style="display: flex; gap: 0.5rem;">
                   <button @click="startEdit(type)" class="btn-edit" title="Edit">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -103,6 +116,7 @@ const loading = ref(true)
 const types = ref([])
 
 const newIncomeType = ref('')
+const newIncomeMainType = ref('Content Revenue')
 const newExpenseType = ref('')
 
 const incomeTypes = computed(() => types.value.filter(t => t.type === 'income'))
@@ -124,11 +138,17 @@ const addType = async (categoryType) => {
   const name = categoryType === 'income' ? newIncomeType.value : newExpenseType.value
   if (!name.trim()) return
 
-  const { error } = await supabase.from('transaction_types').insert({
+  const payload = {
     user_id: user.value.id,
     type: categoryType,
     name: name.trim()
-  })
+  }
+  
+  if (categoryType === 'income') {
+    payload.main_type = newIncomeMainType.value
+  }
+
+  const { error } = await supabase.from('transaction_types').insert(payload)
 
   if (!error) {
     if (categoryType === 'income') newIncomeType.value = ''
@@ -145,10 +165,12 @@ const deleteType = async (id) => {
 
 const editingId = ref(null)
 const editName = ref('')
+const editMainType = ref('Content Revenue')
 
 const startEdit = (t) => {
   editingId.value = t.id
   editName.value = t.name
+  editMainType.value = t.main_type || 'Content Revenue'
 }
 
 const saveEdit = async (t) => {
@@ -162,7 +184,10 @@ const saveEdit = async (t) => {
   loading.value = true
   
   // 1. Update the type in transaction_types
-  const { error: typeError } = await supabase.from('transaction_types').update({ name: newName }).eq('id', t.id)
+  const { error: typeError } = await supabase.from('transaction_types').update({ 
+    name: newName, 
+    main_type: t.type === 'income' ? editMainType.value : null 
+  }).eq('id', t.id)
   if (typeError) {
     loading.value = false
     return
@@ -180,8 +205,17 @@ const saveEdit = async (t) => {
         newDesc = newDesc.replace(`${t.name} - `, `${newName} - `)
       }
       
+      let updateObj = {}
       if (newDesc !== tx.description) {
-        await supabase.from('transactions').update({ description: newDesc }).eq('id', tx.id)
+        updateObj.description = newDesc
+      }
+      // Also update main_type on the transaction if it changed
+      if (t.type === 'income' && editMainType.value !== t.main_type) {
+        updateObj.main_type = editMainType.value
+      }
+
+      if (Object.keys(updateObj).length > 0) {
+        await supabase.from('transactions').update(updateObj).eq('id', tx.id)
       }
     }
   }
