@@ -17,11 +17,11 @@
           </h4>
           
           <form @submit.prevent="addType('income')" style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-            <select v-model="newIncomeMainType" required style="padding: 0.5rem; border-radius: 8px; background: var(--bg-card); color: var(--text); border: 1px solid rgba(255,255,255,0.1);">
+            <select v-model="newIncomeMainType" required style="width: 120px; flex-shrink: 0; padding: 0.5rem; border-radius: 8px; background: var(--bg-card); color: var(--text); border: 1px solid rgba(255,255,255,0.1);">
               <option value="Content Revenue">Content</option>
               <option value="Software Revenue">Software</option>
             </select>
-            <input type="text" v-model="newIncomeType" placeholder="e.g., SLT Revenue" required style="flex: 1;" />
+            <input type="text" v-model="newIncomeType" placeholder="e.g., SLT Revenue" required style="flex: 1; min-width: 0;" />
             <button type="submit" class="btn btn-primary">+</button>
           </form>
 
@@ -32,11 +32,11 @@
           <ul v-else style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.5rem;">
             <li v-for="type in incomeTypes" :key="type.id" class="type-item">
               <template v-if="editingId === type.id">
-                <select v-model="editMainType" style="padding: 0.25rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;">
+                <select v-model="editMainType" style="width: 100px; flex-shrink: 0; padding: 0.25rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;">
                   <option value="Content Revenue">Content</option>
                   <option value="Software Revenue">Software</option>
                 </select>
-                <input type="text" v-model="editName" style="flex: 1; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;" />
+                <input type="text" v-model="editName" style="flex: 1; min-width: 0; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; margin-right: 0.5rem;" />
                 <div style="display: flex; gap: 0.25rem;">
                   <button @click="saveEdit(type)" style="background: var(--primary); border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Save</button>
                   <button @click="editingId = null" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; cursor: pointer;">Cancel</button>
