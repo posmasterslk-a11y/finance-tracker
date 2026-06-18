@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview"
+    "build": "npx nuxi build",
+    "dev": "npx nuxi dev",
+    "generate": "npx nuxi generate",
+    "preview": "npx nuxi preview"
   },
   "devDependencies": {
     "@nuxtjs/supabase": "^1.3.0",
