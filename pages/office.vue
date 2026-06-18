@@ -8,8 +8,17 @@
     <div v-if="loading" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Loading data...</div>
     
     <div v-else class="glass-panel" style="padding: 1.5rem;">
-      <div v-if="transactions.length === 0" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-        No office transactions found.
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
+        <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
+          <button @click="typeFilter = 'all'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'all' ? 'background: var(--primary);' : 'background: transparent;'">All</button>
+          <button @click="typeFilter = 'income'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'income' ? 'background: var(--success);' : 'background: transparent;'">Income</button>
+          <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+        </div>
+      </div>
+
+      <div v-if="filteredTransactions.length === 0" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+        No office transactions found for the selected filter.
       </div>
       <div v-else class="table-responsive">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -23,7 +32,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="t in transactions" :key="t.id" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <tr v-for="t in paginatedTransactions" :key="t.id" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
               <td style="padding: 1rem 0;">{{ new Date(t.date).toLocaleDateString() }}</td>
               <td style="padding: 1rem 0;">{{ t.description }}</td>
               <td style="padding: 1rem 0;">
@@ -52,6 +61,13 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+        <button :disabled="currentPage === 1" @click="currentPage--" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text); cursor: pointer;" :style="currentPage === 1 ? 'opacity: 0.5; cursor: not-allowed;' : ''">Previous</button>
+        <span style="font-size: 0.85rem; color: var(--text-secondary);">Page {{ currentPage }} of {{ totalPages }}</span>
+        <button :disabled="currentPage === totalPages" @click="currentPage++" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text); cursor: pointer;" :style="currentPage === totalPages ? 'opacity: 0.5; cursor: not-allowed;' : ''">Next</button>
+      </div>
     </div>
 
     <TransactionModal :isOpen="isModalOpen" :editData="editingTransaction" forcedCategory="office" @close="closeModal" @saved="fetchData" />
@@ -68,6 +84,27 @@ const isModalOpen = ref(false)
 const editingTransaction = ref(null)
 const loading = ref(true)
 const transactions = ref([])
+
+// Filters and Pagination
+const typeFilter = ref('all')
+const currentPage = ref(1)
+const itemsPerPage = 50
+
+const filteredTransactions = computed(() => {
+  if (typeFilter.value === 'all') return transactions.value
+  return transactions.value.filter(t => t.type === typeFilter.value)
+})
+
+const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage) || 1)
+
+const paginatedTransactions = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  return filteredTransactions.value.slice(start, start + itemsPerPage)
+})
+
+watch(typeFilter, () => {
+  currentPage.value = 1
+})
 
 const openEditModal = (t) => {
   editingTransaction.value = t
@@ -100,6 +137,7 @@ const fetchData = async () => {
     .eq('user_id', user.value.id)
     .eq('category', 'office')
     .order('date', { ascending: false })
+    .order('created_at', { ascending: false })
 
   if (data) transactions.value = data
   loading.value = false

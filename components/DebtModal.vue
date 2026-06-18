@@ -106,7 +106,21 @@ const submitForm = async () => {
       return
     }
 
-    // 2. Update Debt
+    // 2. Log into Debt Payments History
+    const { error: histError } = await supabase.from('debt_payments').insert({
+      user_id: user.value.id,
+      debt_id: props.paymentDebt.id,
+      amount: parseFloat(form.value.payment_amount),
+      date: form.value.date
+    })
+
+    if (histError) {
+      errorMsg.value = histError.message
+      loading.value = false
+      return
+    }
+
+    // 3. Update Debt
     const newPaidAmount = props.paymentDebt.paid_amount + parseFloat(form.value.payment_amount)
     const newStatus = newPaidAmount >= props.paymentDebt.total_amount ? 'completed' : 'active'
 
