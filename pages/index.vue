@@ -119,16 +119,27 @@
           <div v-for="item in contentVariances" :key="item.type" style="display: flex; flex-direction: column; gap: 0.5rem;">
             <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
               <span style="font-weight: 500;">{{ item.type }}</span>
-              <span :class="item.isDrop ? 'text-danger' : 'text-success'" style="font-weight: 600;">
-                {{ item.isDrop ? 'Drop: -Rs' : 'Growth: +Rs' }} {{ Math.abs(item.variance).toLocaleString() }}
-              </span>
+              <div :class="item.isDrop ? 'text-danger' : 'text-success'" style="text-align: right;">
+                <div style="font-weight: 600;">
+                  {{ item.isDrop ? 'Drop: -Rs' : 'Growth: +Rs' }} {{ Math.abs(item.variance).toLocaleString() }}
+                </div>
+                <div v-if="usdToLkr" style="font-size: 0.8rem; opacity: 0.8; font-weight: 500;">
+                  {{ item.isDrop ? '-' : '+' }}${{ (Math.abs(item.variance) / usdToLkr).toFixed(2) }}
+                </div>
+              </div>
             </div>
             <div style="height: 10px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; display: flex;">
               <div :style="{ width: item.barWidth + '%', background: item.isDrop ? '#ef4444' : '#10b981', borderRadius: '5px', transition: 'width 0.5s ease' }"></div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
-              <span>Prev Month: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
-              <span>Last Month: Rs {{ item.lastMonth.toLocaleString() }}</span>
+              <div>
+                <span>{{ prevMonthStr }}: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
+                <span v-if="usdToLkr" style="margin-left: 0.25rem; opacity: 0.8;">(${{ (item.monthBeforeLast / usdToLkr).toFixed(2) }})</span>
+              </div>
+              <div>
+                <span>{{ lastMonthStr }}: Rs {{ item.lastMonth.toLocaleString() }}</span>
+                <span v-if="usdToLkr" style="margin-left: 0.25rem; opacity: 0.8;">(${{ (item.lastMonth / usdToLkr).toFixed(2) }})</span>
+              </div>
             </div>
           </div>
         </div>
@@ -193,8 +204,8 @@
               <div :style="{ width: item.barWidth + '%', background: item.isDrop ? '#ef4444' : '#10b981', borderRadius: '5px', transition: 'width 0.5s ease' }"></div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
-              <span>Prev Month: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
-              <span>Last Month: Rs {{ item.lastMonth.toLocaleString() }}</span>
+              <span>{{ prevMonthStr }}: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
+              <span>{{ lastMonthStr }}: Rs {{ item.lastMonth.toLocaleString() }}</span>
             </div>
           </div>
         </div>
@@ -336,6 +347,8 @@ const softwareMomChartData = ref({ labels: [], datasets: [] })
 const softwareMomPercentage = ref(0)
 const softwareVariances = ref([])
 const contentVariances = ref([])
+const prevMonthStr = ref('Prev Month')
+const lastMonthStr = ref('Last Month')
 
 const chartOptions = {
   responsive: true,
@@ -527,10 +540,14 @@ const updateCharts = () => {
   }
   const softwareNumMonths = softwareMonthLabels.length
   
+  if (contentNumMonths > 1) lastMonthStr.value = contentMonthLabels[contentNumMonths - 2].split(' ')[0] + ' (Last)'
+  if (contentNumMonths > 2) prevMonthStr.value = contentMonthLabels[contentNumMonths - 3].split(' ')[0] + ' (Prev)'
+
   const contentMonthlyTotals = {}
   const softwareMonthlyTotals = {}
 
-  const contentOverallMonthlyTotals = Array(contentNumMonths).fill(0)
+  // Aggregate Data over Time
+  const contentOverallMonthlyTotals = new Array(contentNumMonths).fill(0)
   const softwareOverallMonthlyTotals = Array(softwareNumMonths).fill(0)
 
   ytdIncome.value.forEach(t => {
