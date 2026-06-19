@@ -540,8 +540,19 @@ const updateCharts = () => {
   }
   const softwareNumMonths = softwareMonthLabels.length
 
-  if (contentNumMonths > 0) thisMonthStr.value = contentMonthLabels[contentNumMonths - 1].split(' ')[0] + ' (This Month)'
-  if (contentNumMonths > 1) lastMonthStr.value = contentMonthLabels[contentNumMonths - 2].split(' ')[0] + ' (Last Month)'
+  if (contentNumMonths > 0) {
+    const currentBucketStr = contentMonthLabels[contentNumMonths - 1] // e.g. "Jun 2026"
+    const parts = currentBucketStr.split(' ')
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const monthIdx = monthNames.indexOf(parts[0])
+    
+    // Shift labels back by 1 month because current bucket holds previous month's revenue
+    const revenueMonth1 = monthNames[(monthIdx - 1 + 12) % 12]
+    const revenueMonth2 = monthNames[(monthIdx - 2 + 12) % 12]
+    
+    thisMonthStr.value = `${revenueMonth1} Revenue`
+    lastMonthStr.value = `${revenueMonth2} Revenue`
+  }
 
   const contentMonthlyTotals = {}
   const contentMonthlyUsdTotals = {}
