@@ -10,28 +10,28 @@
     <div v-else class="glass-panel" style="padding: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div class="modern-filter-bar">
           <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select v-model="dateFilter" style="padding: 0.35rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 0.85rem; cursor: pointer;">
+            <select v-model="dateFilter" class="modern-select">
               <option value="all">All Dates</option>
               <option value="current_month">Current Month</option>
               <option value="last_month">Last Month</option>
               <option value="custom">Custom Range</option>
             </select>
             <div v-if="dateFilter === 'custom'" style="display: flex; gap: 0.5rem; align-items: center;">
-              <input type="date" v-model="customStartDate" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text);" />
+              <input type="date" v-model="customStartDate" class="modern-date-input" />
               <span style="color: var(--text-secondary);">-</span>
-              <input type="date" v-model="customEndDate" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text);" />
+              <input type="date" v-model="customEndDate" class="modern-date-input" />
             </div>
           </div>
-          <select v-model="labelFilter" style="padding: 0.35rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 0.85rem; cursor: pointer;">
+          <select v-model="labelFilter" class="modern-select">
             <option value="all">All Sub-Types</option>
             <option v-for="label in uniqueTransactionLabels" :key="label" :value="label">{{ label }}</option>
           </select>
-          <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
-            <button @click="typeFilter = 'all'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'all' ? 'background: var(--primary);' : 'background: transparent;'">All</button>
-            <button @click="typeFilter = 'income'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'income' ? 'background: var(--success);' : 'background: transparent;'">Income</button>
-            <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+          <div class="modern-toggle-group">
+            <button @click="typeFilter = 'all'" class="modern-toggle-btn" :class="{ 'active-all': typeFilter === 'all' }">All</button>
+            <button @click="typeFilter = 'income'" class="modern-toggle-btn" :class="{ 'active-income': typeFilter === 'income' }">Income</button>
+            <button @click="typeFilter = 'expense'" class="modern-toggle-btn" :class="{ 'active-expense': typeFilter === 'expense' }">Expense</button>
           </div>
         </div>
       </div>
@@ -229,3 +229,106 @@ onMounted(() => {
   fetchData()
 })
 </script>
+
+<style scoped>
+.modern-filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modern-select {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem top 50%;
+  background-size: 0.65rem auto;
+  padding-right: 2rem;
+}
+
+.modern-select:hover {
+  background-color: rgba(0,0,0,0.5);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.modern-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.modern-select option {
+  background-color: #0f172a; /* Solid dark background */
+  color: white;
+  padding: 0.5rem;
+}
+
+.modern-date-input {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: var(--text);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.modern-date-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.modern-toggle-group {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(0,0,0,0.3);
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.modern-toggle-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.modern-toggle-btn.active-all {
+  background: var(--primary);
+  color: white;
+}
+
+.modern-toggle-btn.active-income {
+  background: var(--success);
+  color: white;
+}
+
+.modern-toggle-btn.active-expense {
+  background: var(--danger);
+  color: white;
+}
+
+.modern-toggle-btn:hover:not(.active-all):not(.active-income):not(.active-expense) {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+</style>
