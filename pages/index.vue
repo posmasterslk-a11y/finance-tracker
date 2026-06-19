@@ -107,6 +107,33 @@
         </div>
       </div>
 
+      <!-- Content Revenue Variance (Progress Bars) -->
+      <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 0.5rem;">Content Revenue Change (This Month vs Last Month)</h3>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Revenue drop or growth by individual content type</p>
+        
+        <div v-if="!chartDataLoaded" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading data...</div>
+        <div v-else-if="contentVariances.length === 0" style="color: var(--text-secondary); text-align: center; padding: 2rem 0;">No variance data available.</div>
+        
+        <div v-else style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <div v-for="item in contentVariances" :key="item.type" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+              <span style="font-weight: 500;">{{ item.type }}</span>
+              <span :class="item.isDrop ? 'text-danger' : 'text-success'" style="font-weight: 600;">
+                {{ item.isDrop ? 'Drop: -Rs' : 'Growth: +Rs' }} {{ Math.abs(item.variance).toLocaleString() }}
+              </span>
+            </div>
+            <div style="height: 10px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; display: flex;">
+              <div :style="{ width: item.barWidth + '%', background: item.isDrop ? '#ef4444' : '#10b981', borderRadius: '5px', transition: 'width 0.5s ease' }"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+              <span>Last Month: Rs {{ item.lastMonth.toLocaleString() }}</span>
+              <span>This Month: Rs {{ item.thisMonth.toLocaleString() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Software Analytics (New) -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 3rem;">
         <h2 style="font-size: 1.25rem; margin: 0;">Software Revenue Analytics (Year to Date)</h2>
@@ -308,6 +335,7 @@ const contentMomPercentage = ref(0)
 const softwareMomChartData = ref({ labels: [], datasets: [] })
 const softwareMomPercentage = ref(0)
 const softwareVariances = ref([])
+const contentVariances = ref([])
 
 const chartOptions = {
   responsive: true,
@@ -575,6 +603,34 @@ const updateCharts = () => {
   const contentMom = calculateMom(contentOverallMonthlyTotals, contentNumMonths)
   contentMomChartData.value = contentMom.chartData
   contentMomPercentage.value = contentMom.percentage
+  
+  // Calculate Content Variances for Progress Bars
+  const contentVars = []
+  let contentMaxAbsVariance = 0
+
+  Object.keys(contentMonthlyTotals).forEach(type => {
+    const dataArray = contentMonthlyTotals[type]
+    const thisMonth = dataArray[contentNumMonths - 1] || 0
+    const lastMonth = contentNumMonths > 1 ? dataArray[contentNumMonths - 2] : 0
+    
+    const variance = thisMonth - lastMonth
+    if (variance !== 0 || thisMonth > 0 || lastMonth > 0) {
+      if (Math.abs(variance) > contentMaxAbsVariance) contentMaxAbsVariance = Math.abs(variance)
+      contentVars.push({
+        type,
+        thisMonth,
+        lastMonth,
+        variance,
+        isDrop: variance < 0
+      })
+    }
+  })
+
+  contentVars.forEach(v => {
+    v.barWidth = contentMaxAbsVariance > 0 ? (Math.abs(v.variance) / contentMaxAbsVariance) * 100 : 0
+  })
+
+  contentVariances.value = contentVars.sort((a, b) => a.variance - b.variance)
 
   const softwareMom = calculateMom(softwareOverallMonthlyTotals, softwareNumMonths)
   softwareMomChartData.value = softwareMom.chartData
