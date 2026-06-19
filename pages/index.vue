@@ -560,14 +560,15 @@ const updateCharts = () => {
     
     if (t.main_type === 'Content Revenue' || (!t.main_type && t.type === 'income')) {
       const index = (tYear - contentTrendStartYear.value) * 12 + tMonth
-      if (index >= 0 && index < contentNumMonths) {
-        contentOverallMonthlyTotals[index] += t.amount
+      const shiftedIndex = index - 1 // Content revenue belongs to the previous month
+      if (shiftedIndex >= 0 && shiftedIndex < contentNumMonths) {
+        contentOverallMonthlyTotals[shiftedIndex] += t.amount
         if (!contentMonthlyTotals[label]) {
           contentMonthlyTotals[label] = Array(contentNumMonths).fill(0)
           contentMonthlyUsdTotals[label] = Array(contentNumMonths).fill(0)
         }
-        contentMonthlyTotals[label][index] += t.amount
-        contentMonthlyUsdTotals[label][index] += t.currency === 'USD' ? (t.original_amount || 0) : (t.amount / (usdToLkr.value || 300))
+        contentMonthlyTotals[label][shiftedIndex] += t.amount
+        contentMonthlyUsdTotals[label][shiftedIndex] += t.currency === 'USD' ? (t.original_amount || 0) : (t.amount / (usdToLkr.value || 300))
       }
     } else if (t.main_type === 'Software Revenue') {
       const index = (tYear - softwareTrendStartYear.value) * 12 + tMonth
