@@ -103,6 +103,33 @@
         </div>
       </div>
     </div>
+
+    <!-- User Management Section (Internal Registration) -->
+    <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; border-color: rgba(59, 130, 246, 0.3);">
+      <h3 style="margin-bottom: 0.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        User Management
+      </h3>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+        Register a new user account. <strong>Note:</strong> Creating a new user will automatically log you into the new account and redirect you to the login page.
+      </p>
+
+      <form @submit.prevent="registerNewUser" style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">New User Email</label>
+          <input type="email" v-model="newUserEmail" required placeholder="admin@example.com" style="width: 100%; padding: 0.5rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;" />
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">New User Password</label>
+          <input type="password" v-model="newUserPassword" required placeholder="Minimum 6 characters" minlength="6" style="width: 100%; padding: 0.5rem; border-radius: 8px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white;" />
+        </div>
+        <button type="submit" class="btn btn-primary" :disabled="registeringUser" style="margin-top: 0.5rem;">
+          {{ registeringUser ? 'Creating Account...' : 'Create New User' }}
+        </button>
+        <p v-if="registerError" style="color: var(--danger); font-size: 0.85rem; margin-top: 0.5rem;">{{ registerError }}</p>
+        <p v-if="registerSuccess" style="color: var(--success); font-size: 0.85rem; margin-top: 0.5rem;">User created successfully! Redirecting...</p>
+      </form>
+    </div>
   </div>
 </template>
 
@@ -244,6 +271,28 @@ const saveEdit = async (t) => {
     if (updatePromises.length > 0) {
       await Promise.all(updatePromises)
     }
+  }
+}
+
+const registerNewUser = async () => {
+  registeringUser.value = true
+  registerError.value = ''
+  registerSuccess.value = false
+  
+  const { error } = await supabase.auth.signUp({
+    email: newUserEmail.value,
+    password: newUserPassword.value,
+  })
+
+  if (error) {
+    registerError.value = error.message
+    registeringUser.value = false
+  } else {
+    registerSuccess.value = true
+    // Because Supabase logs the new user in, we force a redirect to login so the admin has to re-authenticate as themselves.
+    setTimeout(() => {
+      navigateTo('/login')
+    }, 2000)
   }
 }
 

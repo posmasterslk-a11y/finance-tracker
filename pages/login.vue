@@ -12,7 +12,7 @@
           <input type="password" v-model="password" required placeholder="Enter your password" />
         </div>
         <button type="submit" class="btn-primary" :disabled="loading" style="margin-top: 1rem;">
-          {{ loading ? 'Loading...' : 'Sign In / Register' }}
+          {{ loading ? 'Loading...' : 'Sign In' }}
         </button>
         <p v-if="errorMsg" class="text-danger text-center" style="margin-top: 1rem; font-size: 0.875rem;">{{ errorMsg }}</p>
       </form>
@@ -42,20 +42,7 @@ const handleLogin = async () => {
   })
 
   if (error) {
-    if (error.message.includes('Invalid login credentials')) {
-      // If not found, try register
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email.value,
-        password: password.value,
-      })
-      if (signUpError) {
-         errorMsg.value = signUpError.message
-      } else {
-         navigateTo('/')
-      }
-    } else {
-      errorMsg.value = error.message
-    }
+    errorMsg.value = error.message
   } else {
     navigateTo('/')
   }
