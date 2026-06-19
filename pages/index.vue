@@ -115,13 +115,25 @@
             <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Revenue drop or growth by individual content type</p>
           </div>
           
-          <div v-if="chartDataLoaded && contentVariances.length > 0" :class="totalContentVariance < 0 ? 'text-danger' : 'text-success'" style="text-align: right; background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 150px;">
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 500;">Overall Net Change</div>
-            <div style="font-weight: 700; font-size: 1.1rem;">
-              {{ totalContentVariance < 0 ? '- Rs.' : '+ Rs.' }} {{ Math.abs(totalContentVariance).toLocaleString() }}
+          <div v-if="chartDataLoaded && contentVariances.length > 0" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <div style="text-align: right; background: rgba(239, 68, 68, 0.1); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); min-width: 140px;" v-if="contentTotalDrop < 0">
+              <div style="font-size: 0.85rem; color: var(--danger); margin-bottom: 0.25rem; font-weight: 500;">Total Drop</div>
+              <div style="font-weight: 700; font-size: 1.1rem; color: var(--danger);">
+                - Rs. {{ Math.abs(contentTotalDrop).toLocaleString() }}
+              </div>
+              <div style="font-size: 0.9rem; opacity: 0.9; font-weight: 500; color: var(--danger);">
+                -${{ Math.abs(contentTotalDropUsd).toFixed(2) }}
+              </div>
             </div>
-            <div style="font-size: 0.9rem; opacity: 0.9; font-weight: 500;">
-              {{ totalContentUsdVariance < 0 ? '-' : '+' }}${{ Math.abs(totalContentUsdVariance).toFixed(2) }}
+            
+            <div style="text-align: right; background: rgba(16, 185, 129, 0.1); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); min-width: 140px;" v-if="contentTotalGrowth > 0">
+              <div style="font-size: 0.85rem; color: var(--success); margin-bottom: 0.25rem; font-weight: 500;">Total Growth</div>
+              <div style="font-weight: 700; font-size: 1.1rem; color: var(--success);">
+                + Rs. {{ contentTotalGrowth.toLocaleString() }}
+              </div>
+              <div style="font-size: 0.9rem; opacity: 0.9; font-weight: 500; color: var(--success);">
+                +${{ contentTotalGrowthUsd.toFixed(2) }}
+              </div>
             </div>
           </div>
         </div>
@@ -361,11 +373,17 @@ const softwareMomChartData = ref({ labels: [], datasets: [] })
 const softwareMomPercentage = ref(0)
 const softwareVariances = ref([])
 const contentVariances = ref([])
-const totalContentVariance = computed(() => {
-  return contentVariances.value.reduce((acc, item) => acc + item.variance, 0)
+const contentTotalDrop = computed(() => {
+  return contentVariances.value.filter(i => i.variance < 0).reduce((acc, item) => acc + item.variance, 0)
 })
-const totalContentUsdVariance = computed(() => {
-  return contentVariances.value.reduce((acc, item) => acc + item.usdVariance, 0)
+const contentTotalDropUsd = computed(() => {
+  return contentVariances.value.filter(i => i.variance < 0).reduce((acc, item) => acc + item.usdVariance, 0)
+})
+const contentTotalGrowth = computed(() => {
+  return contentVariances.value.filter(i => i.variance > 0).reduce((acc, item) => acc + item.variance, 0)
+})
+const contentTotalGrowthUsd = computed(() => {
+  return contentVariances.value.filter(i => i.variance > 0).reduce((acc, item) => acc + item.usdVariance, 0)
 })
 const prevMonthStr = ref('Prev Month')
 const lastMonthStr = ref('Last Month')
