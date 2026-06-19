@@ -109,7 +109,7 @@
 
       <!-- Content Revenue Variance (Progress Bars) -->
       <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 0.5rem;">Content Revenue Change (This Month vs Last Month)</h3>
+        <h3 style="margin-bottom: 0.5rem;">Content Revenue Change (Last Month vs Previous Month)</h3>
         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Revenue drop or growth by individual content type</p>
         
         <div v-if="!chartDataLoaded" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading data...</div>
@@ -127,8 +127,8 @@
               <div :style="{ width: item.barWidth + '%', background: item.isDrop ? '#ef4444' : '#10b981', borderRadius: '5px', transition: 'width 0.5s ease' }"></div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+              <span>Prev Month: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
               <span>Last Month: Rs {{ item.lastMonth.toLocaleString() }}</span>
-              <span>This Month: Rs {{ item.thisMonth.toLocaleString() }}</span>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@
 
       <!-- Software Revenue Variance (Progress Bars) -->
       <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 0.5rem;">Software Revenue Change (This Month vs Last Month)</h3>
+        <h3 style="margin-bottom: 0.5rem;">Software Revenue Change (Last Month vs Previous Month)</h3>
         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Revenue drop or growth by individual software type</p>
         
         <div v-if="!chartDataLoaded" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading data...</div>
@@ -193,8 +193,8 @@
               <div :style="{ width: item.barWidth + '%', background: item.isDrop ? '#ef4444' : '#10b981', borderRadius: '5px', transition: 'width 0.5s ease' }"></div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+              <span>Prev Month: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
               <span>Last Month: Rs {{ item.lastMonth.toLocaleString() }}</span>
-              <span>This Month: Rs {{ item.thisMonth.toLocaleString() }}</span>
             </div>
           </div>
         </div>
@@ -610,16 +610,16 @@ const updateCharts = () => {
 
   Object.keys(contentMonthlyTotals).forEach(type => {
     const dataArray = contentMonthlyTotals[type]
-    const thisMonth = dataArray[contentNumMonths - 1] || 0
     const lastMonth = contentNumMonths > 1 ? dataArray[contentNumMonths - 2] : 0
+    const monthBeforeLast = contentNumMonths > 2 ? dataArray[contentNumMonths - 3] : 0
     
-    const variance = thisMonth - lastMonth
-    if (variance !== 0 || thisMonth > 0 || lastMonth > 0) {
+    const variance = lastMonth - monthBeforeLast
+    if (variance !== 0 || lastMonth > 0 || monthBeforeLast > 0) {
       if (Math.abs(variance) > contentMaxAbsVariance) contentMaxAbsVariance = Math.abs(variance)
       contentVars.push({
         type,
-        thisMonth,
         lastMonth,
+        monthBeforeLast,
         variance,
         isDrop: variance < 0
       })
@@ -642,16 +642,16 @@ const updateCharts = () => {
 
   Object.keys(softwareMonthlyTotals).forEach(type => {
     const dataArray = softwareMonthlyTotals[type]
-    const thisMonth = dataArray[softwareNumMonths - 1] || 0
     const lastMonth = softwareNumMonths > 1 ? dataArray[softwareNumMonths - 2] : 0
+    const monthBeforeLast = softwareNumMonths > 2 ? dataArray[softwareNumMonths - 3] : 0
     
-    const variance = thisMonth - lastMonth
-    if (variance !== 0 || thisMonth > 0 || lastMonth > 0) {
+    const variance = lastMonth - monthBeforeLast
+    if (variance !== 0 || lastMonth > 0 || monthBeforeLast > 0) {
       if (Math.abs(variance) > maxAbsVariance) maxAbsVariance = Math.abs(variance)
       variances.push({
         type,
-        thisMonth,
         lastMonth,
+        monthBeforeLast,
         variance,
         isDrop: variance < 0
       })
