@@ -11,6 +11,19 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
         <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <select v-model="dateFilter" style="padding: 0.35rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 0.85rem; cursor: pointer;">
+              <option value="all">All Dates</option>
+              <option value="current_month">Current Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <div v-if="dateFilter === 'custom'" style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="date" v-model="customStartDate" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text);" />
+              <span style="color: var(--text-secondary);">-</span>
+              <input type="date" v-model="customEndDate" style="padding: 0.25rem; font-size: 0.8rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: var(--text);" />
+            </div>
+          </div>
           <select v-model="labelFilter" style="padding: 0.35rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 0.85rem; cursor: pointer;">
             <option value="all">All Sub-Types</option>
             <option v-for="label in uniqueTransactionLabels" :key="label" :value="label">{{ label }}</option>
@@ -94,6 +107,9 @@ const transactions = ref([])
 // Filters and Pagination
 const typeFilter = ref('all')
 const labelFilter = ref('all')
+const dateFilter = ref('all')
+const customStartDate = ref('')
+const customEndDate = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 50
 
@@ -102,7 +118,7 @@ watch(typeFilter, () => {
   currentPage.value = 1
 })
 
-watch(labelFilter, () => {
+watch([labelFilter, dateFilter, customStartDate, customEndDate], () => {
   currentPage.value = 1
 })
 
@@ -119,6 +135,34 @@ const uniqueTransactionLabels = computed(() => {
 const filteredTransactions = computed(() => {
   let result = transactions.value
   
+  if (dateFilter.value !== 'all') {
+    const now = new Date()
+    let startDate = null
+    let endDate = null
+
+    if (dateFilter.value === 'current_month') {
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    } else if (dateFilter.value === 'last_month') {
+      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+      endDate = new Date(now.getFullYear(), now.getMonth(), 0)
+    } else if (dateFilter.value === 'custom') {
+      if (customStartDate.value) startDate = new Date(customStartDate.value)
+      if (customEndDate.value) endDate = new Date(customEndDate.value)
+    }
+
+    result = result.filter(t => {
+      const tDate = new Date(t.date)
+      if (startDate && tDate < startDate) return false
+      if (endDate) {
+        const endDay = new Date(endDate)
+        endDay.setHours(23, 59, 59, 999)
+        if (tDate > endDay) return false
+      }
+      return true
+    })
+  }
+
   if (typeFilter.value !== 'all') {
     result = result.filter(t => t.type === typeFilter.value)
   }
