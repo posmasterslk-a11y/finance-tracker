@@ -133,12 +133,12 @@
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
               <div>
-                <span>{{ lastMonthStr }}: Rs {{ item.lastMonth.toLocaleString() }}</span>
-                <span style="margin-left: 0.25rem; opacity: 0.8;">(${{ item.lastMonthUsd.toFixed(2) }})</span>
+                <span>{{ prevMonthStr }}: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
+                <span style="margin-left: 0.25rem; opacity: 0.8;">(${{ item.monthBeforeLastUsd.toFixed(2) }})</span>
               </div>
               <div>
-                <span>{{ thisMonthStr }}: Rs {{ item.thisMonth.toLocaleString() }}</span>
-                <span style="margin-left: 0.25rem; opacity: 0.8;">(${{ item.thisMonthUsd.toFixed(2) }})</span>
+                <span>{{ lastMonthStr }}: Rs {{ item.lastMonth.toLocaleString() }}</span>
+                <span style="margin-left: 0.25rem; opacity: 0.8;">(${{ item.lastMonthUsd.toFixed(2) }})</span>
               </div>
             </div>
           </div>
@@ -204,8 +204,8 @@
               <div :style="{ width: item.barWidth + '%', background: item.isDrop ? '#ef4444' : '#10b981', borderRadius: '5px', transition: 'width 0.5s ease' }"></div>
             </div>
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+              <span>{{ prevMonthStr }}: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
               <span>{{ lastMonthStr }}: Rs {{ item.lastMonth.toLocaleString() }}</span>
-              <span>{{ thisMonthStr }}: Rs {{ item.thisMonth.toLocaleString() }}</span>
             </div>
           </div>
         </div>
@@ -347,8 +347,8 @@ const softwareMomChartData = ref({ labels: [], datasets: [] })
 const softwareMomPercentage = ref(0)
 const softwareVariances = ref([])
 const contentVariances = ref([])
+const prevMonthStr = ref('Prev Month')
 const lastMonthStr = ref('Last Month')
-const thisMonthStr = ref('This Month')
 
 const chartOptions = {
   responsive: true,
@@ -540,19 +540,8 @@ const updateCharts = () => {
   }
   const softwareNumMonths = softwareMonthLabels.length
 
-  if (contentNumMonths > 0) {
-    const currentBucketStr = contentMonthLabels[contentNumMonths - 1] // e.g. "Jun 2026"
-    const parts = currentBucketStr.split(' ')
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const monthIdx = monthNames.indexOf(parts[0])
-    
-    // Shift labels back by 1 month because current bucket holds previous month's revenue
-    const revenueMonth1 = monthNames[(monthIdx - 1 + 12) % 12]
-    const revenueMonth2 = monthNames[(monthIdx - 2 + 12) % 12]
-    
-    thisMonthStr.value = `${revenueMonth1} Revenue`
-    lastMonthStr.value = `${revenueMonth2} Revenue`
-  }
+  if (contentNumMonths > 1) lastMonthStr.value = contentMonthLabels[contentNumMonths - 2].split(' ')[0]
+  if (contentNumMonths > 2) prevMonthStr.value = contentMonthLabels[contentNumMonths - 3].split(' ')[0]
 
   const contentMonthlyTotals = {}
   const contentMonthlyUsdTotals = {}
@@ -645,23 +634,23 @@ const updateCharts = () => {
     const dataArray = contentMonthlyTotals[type]
     const usdArray = contentMonthlyUsdTotals[type]
     
-    const thisMonth = contentNumMonths > 0 ? dataArray[contentNumMonths - 1] : 0
     const lastMonth = contentNumMonths > 1 ? dataArray[contentNumMonths - 2] : 0
+    const monthBeforeLast = contentNumMonths > 2 ? dataArray[contentNumMonths - 3] : 0
     
-    const thisMonthUsd = contentNumMonths > 0 ? usdArray[contentNumMonths - 1] : 0
     const lastMonthUsd = contentNumMonths > 1 ? usdArray[contentNumMonths - 2] : 0
+    const monthBeforeLastUsd = contentNumMonths > 2 ? usdArray[contentNumMonths - 3] : 0
     
-    const variance = thisMonth - lastMonth
-    const usdVariance = thisMonthUsd - lastMonthUsd
+    const variance = lastMonth - monthBeforeLast
+    const usdVariance = lastMonthUsd - monthBeforeLastUsd
     
-    if (variance !== 0 || thisMonth > 0 || lastMonth > 0) {
+    if (variance !== 0 || lastMonth > 0 || monthBeforeLast > 0) {
       if (Math.abs(variance) > contentMaxAbsVariance) contentMaxAbsVariance = Math.abs(variance)
       contentVars.push({
         type,
-        thisMonth,
         lastMonth,
-        thisMonthUsd,
+        monthBeforeLast,
         lastMonthUsd,
+        monthBeforeLastUsd,
         variance,
         usdVariance,
         isDrop: variance < 0
@@ -685,16 +674,16 @@ const updateCharts = () => {
 
   Object.keys(softwareMonthlyTotals).forEach(type => {
     const dataArray = softwareMonthlyTotals[type]
-    const thisMonth = softwareNumMonths > 0 ? dataArray[softwareNumMonths - 1] : 0
     const lastMonth = softwareNumMonths > 1 ? dataArray[softwareNumMonths - 2] : 0
+    const monthBeforeLast = softwareNumMonths > 2 ? dataArray[softwareNumMonths - 3] : 0
     
-    const variance = thisMonth - lastMonth
-    if (variance !== 0 || thisMonth > 0 || lastMonth > 0) {
+    const variance = lastMonth - monthBeforeLast
+    if (variance !== 0 || lastMonth > 0 || monthBeforeLast > 0) {
       if (Math.abs(variance) > maxAbsVariance) maxAbsVariance = Math.abs(variance)
       variances.push({
         type,
-        thisMonth,
         lastMonth,
+        monthBeforeLast,
         variance,
         isDrop: variance < 0
       })
