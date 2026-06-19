@@ -109,8 +109,22 @@
 
       <!-- Content Revenue Variance (Progress Bars) -->
       <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 0.5rem;">Content Revenue Change (Last Month vs Previous Month)</h3>
-        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Revenue drop or growth by individual content type</p>
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="margin-bottom: 0.5rem; margin-top: 0;">Content Revenue Change (Last Month vs Previous Month)</h3>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Revenue drop or growth by individual content type</p>
+          </div>
+          
+          <div v-if="chartDataLoaded && contentVariances.length > 0" :class="totalContentVariance < 0 ? 'text-danger' : 'text-success'" style="text-align: right; background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 150px;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 500;">Total Net Change</div>
+            <div style="font-weight: 700; font-size: 1.1rem;">
+              {{ totalContentVariance < 0 ? 'Drop: -Rs' : 'Growth: +Rs' }} {{ Math.abs(totalContentVariance).toLocaleString() }}
+            </div>
+            <div style="font-size: 0.9rem; opacity: 0.9; font-weight: 500;">
+              {{ totalContentUsdVariance < 0 ? '-' : '+' }}${{ Math.abs(totalContentUsdVariance).toFixed(2) }}
+            </div>
+          </div>
+        </div>
         
         <div v-if="!chartDataLoaded" style="text-align: center; padding: 2rem; color: var(--text-secondary);">Loading data...</div>
         <div v-else-if="contentVariances.length === 0" style="color: var(--text-secondary); text-align: center; padding: 2rem 0;">No variance data available.</div>
@@ -347,6 +361,12 @@ const softwareMomChartData = ref({ labels: [], datasets: [] })
 const softwareMomPercentage = ref(0)
 const softwareVariances = ref([])
 const contentVariances = ref([])
+const totalContentVariance = computed(() => {
+  return contentVariances.value.reduce((acc, item) => acc + item.variance, 0)
+})
+const totalContentUsdVariance = computed(() => {
+  return contentVariances.value.reduce((acc, item) => acc + item.usdVariance, 0)
+})
 const prevMonthStr = ref('Prev Month')
 const lastMonthStr = ref('Last Month')
 
