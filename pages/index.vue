@@ -68,8 +68,24 @@
         </div>
       </div>
 
-      <!-- Income Analytics (New) -->
-      <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Income Analytics (Year to Date)</h2>
+      <!-- Content Analytics (New) -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="font-size: 1.25rem; margin: 0;">Content Revenue Analytics (Year to Date)</h2>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <label for="contentTrendYear" style="font-size: 0.85rem; color: var(--text-secondary);">Start Year:</label>
+          <select 
+            id="contentTrendYear"
+            v-model="contentTrendStartYear" 
+            @change="fetchTrendData"
+            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
+          >
+            <option v-for="year in availableYears" :key="year" :value="year" style="color: black;">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+      </div>
+      
       <div class="dashboard-charts" style="margin-bottom: 2rem;">
         <!-- Content Trend -->
         <div class="glass-panel" style="padding: 1.5rem;">
@@ -77,23 +93,53 @@
           <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Monthly income starting from January</p>
           <Line v-if="chartDataLoaded" :data="contentTrendChartData" :options="lineChartOptions" style="max-height: 300px;" />
         </div>
+        <!-- Content MoM Comparison -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+          <h3 style="margin-bottom: 0.5rem;">This Month vs Last Month</h3>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Comparing total content revenue</p>
+          <Bar v-if="chartDataLoaded" :data="contentMomChartData" :options="chartOptions" style="max-height: 300px;" />
+          <div v-if="chartDataLoaded" style="text-align: center; margin-top: 1rem;">
+            <span :class="contentMomPercentage >= 0 ? 'text-success' : 'text-danger'" style="font-size: 1.25rem; font-weight: 600;">
+              {{ contentMomPercentage >= 0 ? '+' : '' }}{{ contentMomPercentage }}%
+            </span>
+            <span style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 0.5rem;">vs last month</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Software Analytics (New) -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 3rem;">
+        <h2 style="font-size: 1.25rem; margin: 0;">Software Revenue Analytics (Year to Date)</h2>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <label for="softwareTrendYear" style="font-size: 0.85rem; color: var(--text-secondary);">Start Year:</label>
+          <select 
+            id="softwareTrendYear"
+            v-model="softwareTrendStartYear" 
+            @change="fetchTrendData"
+            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
+          >
+            <option v-for="year in availableYears" :key="year" :value="year" style="color: black;">
+              {{ year }}
+            </option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="dashboard-charts" style="margin-bottom: 2rem;">
         <!-- Software Trend -->
         <div class="glass-panel" style="padding: 1.5rem;">
           <h3 style="margin-bottom: 0.5rem;">Software Revenue Trend</h3>
           <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Monthly income starting from January</p>
           <Line v-if="chartDataLoaded" :data="softwareTrendChartData" :options="lineChartOptions" style="max-height: 300px;" />
         </div>
-      </div>
-
-      <div class="dashboard-charts" style="margin-bottom: 2rem;">
-        <!-- MoM Comparison -->
+        <!-- Software MoM Comparison -->
         <div class="glass-panel" style="padding: 1.5rem;">
           <h3 style="margin-bottom: 0.5rem;">This Month vs Last Month</h3>
-          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Comparing total income</p>
-          <Bar v-if="chartDataLoaded" :data="momChartData" :options="chartOptions" style="max-height: 300px;" />
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Comparing total software revenue</p>
+          <Bar v-if="chartDataLoaded" :data="softwareMomChartData" :options="chartOptions" style="max-height: 300px;" />
           <div v-if="chartDataLoaded" style="text-align: center; margin-top: 1rem;">
-            <span :class="momPercentage >= 0 ? 'text-success' : 'text-danger'" style="font-size: 1.25rem; font-weight: 600;">
-              {{ momPercentage >= 0 ? '+' : '' }}{{ momPercentage }}%
+            <span :class="softwareMomPercentage >= 0 ? 'text-success' : 'text-danger'" style="font-size: 1.25rem; font-weight: 600;">
+              {{ softwareMomPercentage >= 0 ? '+' : '' }}{{ softwareMomPercentage }}%
             </span>
             <span style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 0.5rem;">vs last month</span>
           </div>
@@ -169,6 +215,16 @@ const now = new Date()
 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
 const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
 
+const contentTrendStartYear = ref(now.getFullYear())
+const softwareTrendStartYear = ref(now.getFullYear())
+const availableYears = computed(() => {
+  const years = []
+  for (let y = now.getFullYear(); y >= 2020; y--) {
+    years.push(y)
+  }
+  return years
+})
+
 const formatLocalDate = (date) => {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
@@ -220,8 +276,10 @@ const incomeTypeBreakdownData = ref({ labels: [], datasets: [{ data: [] }] })
 const expenseTypeBreakdownData = ref({ labels: [], datasets: [{ data: [] }] })
 const contentTrendChartData = ref({ labels: [], datasets: [] })
 const softwareTrendChartData = ref({ labels: [], datasets: [] })
-const momChartData = ref({ labels: [], datasets: [] })
-const momPercentage = ref(0)
+const contentMomChartData = ref({ labels: [], datasets: [] })
+const contentMomPercentage = ref(0)
+const softwareMomChartData = ref({ labels: [], datasets: [] })
+const softwareMomPercentage = ref(0)
 
 const chartOptions = {
   responsive: true,
@@ -256,6 +314,8 @@ const lineChartOptions = {
 }
 
 const fetchData = async () => {
+  if (!user.value) return
+  
   loading.value = true
   chartDataLoaded.value = false
 
@@ -271,8 +331,9 @@ const fetchData = async () => {
     transactions.value = data
   }
 
-  // Fetch YTD Income data
-  const firstJan = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]
+  // Fetch YTD Income data (from earliest selected year)
+  const earliestYear = Math.min(contentTrendStartYear.value, softwareTrendStartYear.value)
+  const firstJan = new Date(earliestYear, 0, 1).toISOString().split('T')[0]
   const { data: ytdData } = await supabase
     .from('transactions')
     .select('*')
@@ -312,6 +373,27 @@ const fetchData = async () => {
   }
 
   loading.value = false
+}
+
+// Quietly fetch only the YTD Income data and refresh the charts smoothly without showing a loading spinner
+const fetchTrendData = async () => {
+  if (!user.value) return
+  
+  const earliestYear = Math.min(contentTrendStartYear.value, softwareTrendStartYear.value)
+  const firstJan = new Date(earliestYear, 0, 1).toISOString().split('T')[0]
+  const { data: ytdData } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', user.value.id)
+    .eq('type', 'income')
+    .gte('date', firstJan)
+    .order('date', { ascending: true })
+
+  if (ytdData) {
+    ytdIncome.value = ytdData
+  }
+  
+  updateCharts()
 }
 
 const updateCharts = () => {
@@ -365,26 +447,57 @@ const updateCharts = () => {
   expenseTypeBreakdownData.value = generatePieData(transactions.value, 'expense')
 
   // Trend Line Chart Data (Broken down by Main Type -> Types)
+  const endYear = now.getFullYear()
   const currentMonthIndex = now.getMonth()
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  
+  // Build Content Labels
+  const contentMonthLabels = []
+  for (let y = contentTrendStartYear.value; y <= endYear; y++) {
+    const limit = (y === endYear) ? currentMonthIndex : 11
+    for (let m = 0; m <= limit; m++) {
+      contentMonthLabels.push(`${monthNames[m]} ${y}`)
+    }
+  }
+  const contentNumMonths = contentMonthLabels.length
+  
+  // Build Software Labels
+  const softwareMonthLabels = []
+  for (let y = softwareTrendStartYear.value; y <= endYear; y++) {
+    const limit = (y === endYear) ? currentMonthIndex : 11
+    for (let m = 0; m <= limit; m++) {
+      softwareMonthLabels.push(`${monthNames[m]} ${y}`)
+    }
+  }
+  const softwareNumMonths = softwareMonthLabels.length
   
   const contentMonthlyTotals = {}
   const softwareMonthlyTotals = {}
 
+  const contentOverallMonthlyTotals = Array(contentNumMonths).fill(0)
+  const softwareOverallMonthlyTotals = Array(softwareNumMonths).fill(0)
+
   ytdIncome.value.forEach(t => {
-    const month = new Date(t.date).getMonth()
+    const dateObj = new Date(t.date)
+    const tYear = dateObj.getFullYear()
+    const tMonth = dateObj.getMonth()
+    
     const label = getBaseLabel(t.description)
     
-    if (t.main_type === 'Content Revenue') {
-      if (!contentMonthlyTotals[label]) contentMonthlyTotals[label] = Array(12).fill(0)
-      contentMonthlyTotals[label][month] += t.amount
+    if (t.main_type === 'Content Revenue' || (!t.main_type && t.type === 'income')) {
+      const index = (tYear - contentTrendStartYear.value) * 12 + tMonth
+      if (index >= 0 && index < contentNumMonths) {
+        contentOverallMonthlyTotals[index] += t.amount
+        if (!contentMonthlyTotals[label]) contentMonthlyTotals[label] = Array(contentNumMonths).fill(0)
+        contentMonthlyTotals[label][index] += t.amount
+      }
     } else if (t.main_type === 'Software Revenue') {
-      if (!softwareMonthlyTotals[label]) softwareMonthlyTotals[label] = Array(12).fill(0)
-      softwareMonthlyTotals[label][month] += t.amount
-    } else {
-      // Put any uncategorized or missing main_type into Content by default or a mixed chart
-      if (!contentMonthlyTotals[label]) contentMonthlyTotals[label] = Array(12).fill(0)
-      contentMonthlyTotals[label][month] += t.amount
+      const index = (tYear - softwareTrendStartYear.value) * 12 + tMonth
+      if (index >= 0 && index < softwareNumMonths) {
+        softwareOverallMonthlyTotals[index] += t.amount
+        if (!softwareMonthlyTotals[label]) softwareMonthlyTotals[label] = Array(softwareNumMonths).fill(0)
+        softwareMonthlyTotals[label][index] += t.amount
+      }
     }
   })
   
@@ -398,45 +511,57 @@ const updateCharts = () => {
         borderColor: color,
         backgroundColor: color,
         fill: false,
-        data: monthlyTotalsObj[label].slice(0, currentMonthIndex + 1),
+        data: monthlyTotalsObj[label],
         tension: 0.4
       }
     })
   }
   
   contentTrendChartData.value = {
-    labels: monthLabels.slice(0, currentMonthIndex + 1),
+    labels: contentMonthLabels,
     datasets: buildLineDatasets(contentMonthlyTotals)
   }
 
   softwareTrendChartData.value = {
-    labels: monthLabels.slice(0, currentMonthIndex + 1),
+    labels: softwareMonthLabels,
     datasets: buildLineDatasets(softwareMonthlyTotals)
   }
 
-  // Month over Month Chart Data
-  const thisMonthIncome = overallMonthlyTotals[currentMonthIndex]
-  const lastMonthIncome = currentMonthIndex > 0 ? overallMonthlyTotals[currentMonthIndex - 1] : 0
-  
-  momChartData.value = {
-    labels: ['Last Month', 'This Month'],
-    datasets: [{
-      backgroundColor: ['#94a3b8', '#10b981'],
-      data: [lastMonthIncome, thisMonthIncome]
-    }]
+  // Month over Month Chart Data Logic
+  const calculateMom = (overallTotalsArray, numMonths) => {
+    const thisMonth = overallTotalsArray[numMonths - 1] || 0
+    const lastMonth = numMonths > 1 ? overallTotalsArray[numMonths - 2] : 0
+    let percentage = 0
+    if (lastMonth > 0) percentage = (((thisMonth - lastMonth) / lastMonth) * 100).toFixed(1)
+    else percentage = thisMonth > 0 ? 100 : 0
+
+    return {
+      chartData: {
+        labels: ['Last Month', 'This Month'],
+        datasets: [{ backgroundColor: ['#94a3b8', '#10b981'], data: [lastMonth, thisMonth] }]
+      },
+      percentage
+    }
   }
-  
-  if (lastMonthIncome > 0) {
-    momPercentage.value = (((thisMonthIncome - lastMonthIncome) / lastMonthIncome) * 100).toFixed(1)
-  } else {
-    momPercentage.value = thisMonthIncome > 0 ? 100 : 0
-  }
+
+  const contentMom = calculateMom(contentOverallMonthlyTotals, contentNumMonths)
+  contentMomChartData.value = contentMom.chartData
+  contentMomPercentage.value = contentMom.percentage
+
+  const softwareMom = calculateMom(softwareOverallMonthlyTotals, softwareNumMonths)
+  softwareMomChartData.value = softwareMom.chartData
+  softwareMomPercentage.value = softwareMom.percentage
   
   chartDataLoaded.value = true
 }
 
 onMounted(() => {
   fetchRate()
-  fetchData()
 })
+
+watch(user, (newUser) => {
+  if (newUser) {
+    fetchData()
+  }
+}, { immediate: true })
 </script>
