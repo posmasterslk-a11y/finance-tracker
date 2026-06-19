@@ -116,9 +116,9 @@
           </div>
           
           <div v-if="chartDataLoaded && contentVariances.length > 0" :class="totalContentVariance < 0 ? 'text-danger' : 'text-success'" style="text-align: right; background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); min-width: 150px;">
-            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 500;">Total Net Change</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem; font-weight: 500;">Overall Net Change</div>
             <div style="font-weight: 700; font-size: 1.1rem;">
-              {{ totalContentVariance < 0 ? 'Drop: -Rs' : 'Growth: +Rs' }} {{ Math.abs(totalContentVariance).toLocaleString() }}
+              {{ totalContentVariance < 0 ? '- Rs.' : '+ Rs.' }} {{ Math.abs(totalContentVariance).toLocaleString() }}
             </div>
             <div style="font-size: 0.9rem; opacity: 0.9; font-weight: 500;">
               {{ totalContentUsdVariance < 0 ? '-' : '+' }}${{ Math.abs(totalContentUsdVariance).toFixed(2) }}
