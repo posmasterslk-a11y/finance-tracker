@@ -123,8 +123,8 @@
                 <div style="font-weight: 600;">
                   {{ item.isDrop ? 'Drop: -Rs' : 'Growth: +Rs' }} {{ Math.abs(item.variance).toLocaleString() }}
                 </div>
-                <div v-if="usdToLkr" style="font-size: 0.8rem; opacity: 0.8; font-weight: 500;">
-                  {{ item.isDrop ? '-' : '+' }}${{ (Math.abs(item.variance) / usdToLkr).toFixed(2) }}
+                <div style="font-size: 0.8rem; opacity: 0.8; font-weight: 500;">
+                  {{ item.isDrop ? '-' : '+' }}${{ Math.abs(item.usdVariance).toFixed(2) }}
                 </div>
               </div>
             </div>
@@ -134,11 +134,11 @@
             <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
               <div>
                 <span>{{ prevMonthStr }}: Rs {{ item.monthBeforeLast.toLocaleString() }}</span>
-                <span v-if="usdToLkr" style="margin-left: 0.25rem; opacity: 0.8;">(${{ (item.monthBeforeLast / usdToLkr).toFixed(2) }})</span>
+                <span style="margin-left: 0.25rem; opacity: 0.8;">(${{ item.monthBeforeLastUsd.toFixed(2) }})</span>
               </div>
               <div>
                 <span>{{ lastMonthStr }}: Rs {{ item.lastMonth.toLocaleString() }}</span>
-                <span v-if="usdToLkr" style="margin-left: 0.25rem; opacity: 0.8;">(${{ (item.lastMonth / usdToLkr).toFixed(2) }})</span>
+                <span style="margin-left: 0.25rem; opacity: 0.8;">(${{ item.lastMonthUsd.toFixed(2) }})</span>
               </div>
             </div>
           </div>
@@ -544,6 +544,7 @@ const updateCharts = () => {
   if (contentNumMonths > 2) prevMonthStr.value = contentMonthLabels[contentNumMonths - 3].split(' ')[0] + ' (Prev)'
 
   const contentMonthlyTotals = {}
+  const contentMonthlyUsdTotals = {}
   const softwareMonthlyTotals = {}
 
   // Aggregate Data over Time
@@ -561,8 +562,12 @@ const updateCharts = () => {
       const index = (tYear - contentTrendStartYear.value) * 12 + tMonth
       if (index >= 0 && index < contentNumMonths) {
         contentOverallMonthlyTotals[index] += t.amount
-        if (!contentMonthlyTotals[label]) contentMonthlyTotals[label] = Array(contentNumMonths).fill(0)
+        if (!contentMonthlyTotals[label]) {
+          contentMonthlyTotals[label] = Array(contentNumMonths).fill(0)
+          contentMonthlyUsdTotals[label] = Array(contentNumMonths).fill(0)
+        }
         contentMonthlyTotals[label][index] += t.amount
+        contentMonthlyUsdTotals[label][index] += t.currency === 'USD' ? (t.original_amount || 0) : (t.amount / (usdToLkr.value || 300))
       }
     } else if (t.main_type === 'Software Revenue') {
       const index = (tYear - softwareTrendStartYear.value) * 12 + tMonth
@@ -627,17 +632,27 @@ const updateCharts = () => {
 
   Object.keys(contentMonthlyTotals).forEach(type => {
     const dataArray = contentMonthlyTotals[type]
+    const usdArray = contentMonthlyUsdTotals[type]
+    
     const lastMonth = contentNumMonths > 1 ? dataArray[contentNumMonths - 2] : 0
     const monthBeforeLast = contentNumMonths > 2 ? dataArray[contentNumMonths - 3] : 0
     
+    const lastMonthUsd = contentNumMonths > 1 ? usdArray[contentNumMonths - 2] : 0
+    const monthBeforeLastUsd = contentNumMonths > 2 ? usdArray[contentNumMonths - 3] : 0
+    
     const variance = lastMonth - monthBeforeLast
+    const usdVariance = lastMonthUsd - monthBeforeLastUsd
+    
     if (variance !== 0 || lastMonth > 0 || monthBeforeLast > 0) {
       if (Math.abs(variance) > contentMaxAbsVariance) contentMaxAbsVariance = Math.abs(variance)
       contentVars.push({
         type,
         lastMonth,
         monthBeforeLast,
+        lastMonthUsd,
+        monthBeforeLastUsd,
         variance,
+        usdVariance,
         isDrop: variance < 0
       })
     }
