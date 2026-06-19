@@ -10,10 +10,16 @@
     <div v-else class="glass-panel" style="padding: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
-        <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
-          <button @click="typeFilter = 'all'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'all' ? 'background: var(--primary);' : 'background: transparent;'">All</button>
-          <button @click="typeFilter = 'income'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'income' ? 'background: var(--success);' : 'background: transparent;'">Income</button>
-          <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <select v-model="labelFilter" style="padding: 0.35rem 0.5rem; border-radius: 6px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: var(--text); font-size: 0.85rem; cursor: pointer;">
+            <option value="all">All Sub-Types</option>
+            <option v-for="label in uniqueTransactionLabels" :key="label" :value="label">{{ label }}</option>
+          </select>
+          <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
+            <button @click="typeFilter = 'all'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'all' ? 'background: var(--primary);' : 'background: transparent;'">All</button>
+            <button @click="typeFilter = 'income'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'income' ? 'background: var(--success);' : 'background: transparent;'">Income</button>
+            <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+          </div>
         </div>
       </div>
 
@@ -87,12 +93,44 @@ const transactions = ref([])
 
 // Filters and Pagination
 const typeFilter = ref('all')
+const labelFilter = ref('all')
 const currentPage = ref(1)
 const itemsPerPage = 50
 
+watch(typeFilter, () => {
+  labelFilter.value = 'all'
+  currentPage.value = 1
+})
+
+watch(labelFilter, () => {
+  currentPage.value = 1
+})
+
+const uniqueTransactionLabels = computed(() => {
+  const labels = new Set()
+  const list = typeFilter.value === 'all' ? transactions.value : transactions.value.filter(t => t.type === typeFilter.value)
+  list.forEach(t => {
+    const label = t.description ? t.description.split(' - ')[0] : ''
+    if (label) labels.add(label)
+  })
+  return Array.from(labels).sort()
+})
+
 const filteredTransactions = computed(() => {
-  if (typeFilter.value === 'all') return transactions.value
-  return transactions.value.filter(t => t.type === typeFilter.value)
+  let result = transactions.value
+  
+  if (typeFilter.value !== 'all') {
+    result = result.filter(t => t.type === typeFilter.value)
+  }
+  
+  if (labelFilter.value !== 'all') {
+    result = result.filter(t => {
+      const label = t.description ? t.description.split(' - ')[0] : ''
+      return label === labelFilter.value
+    })
+  }
+  
+  return result
 })
 
 const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage) || 1)
