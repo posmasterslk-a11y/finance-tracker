@@ -37,6 +37,18 @@
         </div>
       </div>
 
+      <div v-if="chartDataLoaded" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+          <h3 style="margin-bottom: 1.5rem; font-size: 1rem; color: var(--text-secondary); text-align: center;">Income vs Expenses</h3>
+          <Bar :data="incomeVsExpenseData" :options="barChartOptions" style="max-height: 250px;" />
+        </div>
+        <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 1.5rem; border: 1px solid rgba(255,255,255,0.05);">
+          <h3 style="margin-bottom: 1.5rem; font-size: 1rem; color: var(--text-secondary); text-align: center;">Expenses by Description</h3>
+          <Pie v-if="expensePieChartData.labels.length > 0" :data="expensePieChartData" :options="pieChartOptions" style="max-height: 250px; display: flex; justify-content: center;" />
+          <div v-else style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">No expense data found.</div>
+        </div>
+      </div>
+
       <div v-if="filteredTransactions.length === 0" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
         No office transactions found for the selected filter.
       </div>
@@ -95,6 +107,8 @@
 </template>
 
 <script setup>
+import { Bar, Pie } from 'vue-chartjs'
+
 definePageMeta({ middleware: 'auth' })
 
 const supabase = useSupabaseClient()
@@ -183,6 +197,58 @@ const filteredTransactions = computed(() => {
   
   return result
 })
+
+const chartDataLoaded = computed(() => transactions.value.length > 0 && !loading.value)
+
+const expensePieChartData = computed(() => {
+  const grouped = {}
+  filteredTransactions.value.filter(t => t.type === 'expense').forEach(t => {
+    const label = t.description ? t.description.split(' - ')[0] : 'Other'
+    grouped[label] = (grouped[label] || 0) + t.amount
+  })
+  
+  const labels = Object.keys(grouped)
+  const data = Object.values(grouped)
+  const colors = ['#f43f5e', '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899']
+
+  return {
+    labels,
+    datasets: [{
+      backgroundColor: labels.map((_, i) => colors[i % colors.length]),
+      data,
+      borderWidth: 0
+    }]
+  }
+})
+
+const incomeVsExpenseData = computed(() => {
+  const totalIncome = filteredTransactions.value.filter(t => t.type === 'income').reduce((a, t) => a + t.amount, 0)
+  const totalExpense = filteredTransactions.value.filter(t => t.type === 'expense').reduce((a, t) => a + t.amount, 0)
+
+  return {
+    labels: ['Income', 'Expense'],
+    datasets: [{
+      backgroundColor: ['#10b981', '#ef4444'],
+      data: [totalIncome, totalExpense]
+    }]
+  }
+})
+
+const pieChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } }
+}
+
+const barChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
+    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+  }
+}
 
 const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage) || 1)
 
