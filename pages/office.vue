@@ -11,6 +11,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
         <div class="modern-filter-bar">
+          <input type="text" v-model="searchQuery" placeholder="Search description..." class="modern-date-input" style="width: 200px;" />
           <div style="display: flex; gap: 0.5rem; align-items: center;">
             <select v-model="dateFilter" class="modern-select">
               <option value="all">All Dates</option>
@@ -105,6 +106,7 @@ const loading = ref(true)
 const transactions = ref([])
 
 // Filters and Pagination
+const searchQuery = ref('')
 const typeFilter = ref('all')
 const labelFilter = ref('all')
 const dateFilter = ref('all')
@@ -118,7 +120,7 @@ watch(typeFilter, () => {
   currentPage.value = 1
 })
 
-watch([labelFilter, dateFilter, customStartDate, customEndDate], () => {
+watch([searchQuery, labelFilter, dateFilter, customStartDate, customEndDate], () => {
   currentPage.value = 1
 })
 
@@ -134,6 +136,11 @@ const uniqueTransactionLabels = computed(() => {
 
 const filteredTransactions = computed(() => {
   let result = transactions.value
+  
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(t => t.description && t.description.toLowerCase().includes(q))
+  }
   
   if (dateFilter.value !== 'all') {
     const now = new Date()

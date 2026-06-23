@@ -66,10 +66,13 @@
       <div class="glass-panel" style="padding: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
-        <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <input type="text" v-model="searchQuery" placeholder="Search description..." style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); outline: none; width: 200px;" />
+          <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
           <button @click="typeFilter = 'all'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'all' ? 'background: var(--primary);' : 'background: transparent;'">All</button>
           <button @click="typeFilter = 'income'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'income' ? 'background: var(--success);' : 'background: transparent;'">Income</button>
-          <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+            <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+          </div>
         </div>
       </div>
 
@@ -151,13 +154,24 @@ const debtPayments = ref([])
 const expandedHistory = ref(null)
 
 // Filters and Pagination
+const searchQuery = ref('')
 const typeFilter = ref('all')
 const currentPage = ref(1)
 const itemsPerPage = 50
 
 const filteredTransactions = computed(() => {
-  if (typeFilter.value === 'all') return transactions.value
-  return transactions.value.filter(t => t.type === typeFilter.value)
+  let result = transactions.value
+  
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(t => t.description && t.description.toLowerCase().includes(q))
+  }
+  
+  if (typeFilter.value !== 'all') {
+    result = result.filter(t => t.type === typeFilter.value)
+  }
+  
+  return result
 })
 
 const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage) || 1)
@@ -167,7 +181,7 @@ const paginatedTransactions = computed(() => {
   return filteredTransactions.value.slice(start, start + itemsPerPage)
 })
 
-watch(typeFilter, () => {
+watch([searchQuery, typeFilter], () => {
   currentPage.value = 1
 })
 
