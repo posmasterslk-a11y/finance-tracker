@@ -2,18 +2,18 @@
   <div class="modal-overlay" v-if="isOpen" @click.self="closeModal">
     <div class="modal-content glass-panel">
       <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">
-        {{ isPaymentMode ? 'Receive Payment' : 'New Loan Given (Money Lent)' }}
+        {{ isPaymentMode ? 'Pay Debt' : 'Add New Debt' }}
       </h3>
       
       <form @submit.prevent="submitForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
         
         <div v-if="!isPaymentMode">
-          <label>Person / Name (e.g., Friend's Name)</label>
+          <label>Debt Name (e.g., Car Loan, Friend)</label>
           <input type="text" v-model="form.name" required placeholder="Enter debt name" />
         </div>
 
         <div v-if="!isPaymentMode">
-          <label>Total Amount Lent (Rs.)</label>
+          <label>Total Amount Owed (Rs.)</label>
           <input type="number" v-model="form.total_amount" step="0.01" min="0" required placeholder="0.00" />
         </div>
 
@@ -25,11 +25,11 @@
         <!-- Payment Mode specific fields -->
         <div v-if="isPaymentMode">
           <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-            Receiving from: <strong style="color: var(--text);">{{ paymentDebt?.name }}</strong><br />
+            Paying towards: <strong style="color: var(--text);">{{ paymentDebt?.name }}</strong><br />
             Remaining Balance: <strong class="text-danger">Rs. {{ (paymentDebt?.total_amount - paymentDebt?.paid_amount).toFixed(2) }}</strong>
           </div>
           
-          <label>Received Amount (Rs.)</label>
+          <label>Payment Amount (Rs.)</label>
           <input type="number" v-model="form.payment_amount" step="0.01" min="0" :max="paymentDebt?.total_amount - paymentDebt?.paid_amount" required placeholder="0.00" />
         </div>
 
@@ -41,7 +41,7 @@
         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
           <button type="button" @click="closeModal" class="btn-danger" style="flex: 1;">Cancel</button>
           <button type="submit" class="btn-primary" :disabled="loading" style="flex: 1;">
-            {{ loading ? 'Saving...' : (isPaymentMode ? 'Collect Payment' : 'Save Loan') }}
+            {{ loading ? 'Saving...' : (isPaymentMode ? 'Make Payment' : 'Save Debt') }}
           </button>
         </div>
         <p v-if="errorMsg" class="text-danger">{{ errorMsg }}</p>
@@ -100,10 +100,10 @@ const submitForm = async () => {
     // 1. Log Transaction
     const { error: txError } = await supabase.from('transactions').insert({
       user_id: user.value.id,
-      type: 'income',
+      type: 'expense',
       category: 'personal',
       amount: parseFloat(form.value.payment_amount),
-      description: `Loan Repayment Received - ${props.paymentDebt.name}`,
+      description: `Debt Payment - ${props.paymentDebt.name}`,
       date: form.value.date
     })
 
