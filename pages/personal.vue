@@ -34,7 +34,10 @@
             <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
               Total: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
               Paid: <strong class="text-success">Rs. {{ debt.paid_amount.toLocaleString() }}</strong> <br>
-              Balance: <strong style="color: var(--text);">Rs. {{ (debt.total_amount - debt.paid_amount).toLocaleString() }}</strong>
+              Balance: <strong style="color: var(--text);">Rs. {{ (debt.total_amount - debt.paid_amount).toLocaleString() }}</strong> <br>
+              <span v-if="debt.due_date" style="display: inline-block; margin-top: 0.5rem; color: #f59e0b;">
+                Return Date: <strong>{{ new Date(debt.due_date).toLocaleDateString() }}</strong>
+              </span>
             </div>
             <div style="width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 1rem; overflow: hidden;">
               <div :style="`width: ${Math.min((debt.paid_amount / debt.total_amount) * 100, 100)}%; background: var(--success); height: 100%;`"></div>

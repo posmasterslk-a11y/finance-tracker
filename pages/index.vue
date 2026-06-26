@@ -292,6 +292,43 @@
           </table>
         </div>
       </div>
+
+      <!-- Upcoming Debts to Collect -->
+      <div class="glass-panel" style="padding: 1.5rem; margin-top: 2rem;">
+        <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Upcoming Debts to Collect (Due in 7 days or Overdue)
+          </div>
+          <div style="display: flex; gap: 1.5rem; align-items: center;">
+            <span v-if="upcomingDebts.length > 0" style="font-size: 1rem; font-weight: 600; color: #f59e0b;">
+              Total to Collect: Rs. {{ formatCurrency(totalUpcomingDebtsLKR) }}
+            </span>
+          </div>
+        </h3>
+        <div v-if="upcomingDebts.length === 0" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+          No debts due in the next 7 days.
+        </div>
+        <div v-else class="table-responsive">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <tbody>
+              <tr v-for="debt in upcomingDebts" :key="debt.id" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 1rem 0;">
+                  <div style="font-weight: 500;">{{ debt.name }}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: capitalize;">Debt</div>
+                </td>
+                <td style="padding: 1rem 0;" :class="new Date(debt.due_date) < new Date() ? 'text-danger' : ''">
+                  Due: {{ new Date(debt.due_date).toLocaleDateString() }}
+                  <span v-if="new Date(debt.due_date) < new Date()" style="font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">(Overdue)</span>
+                </td>
+                <td style="padding: 1rem 0; text-align: right; font-weight: 500;">
+                  <span style="color: #f59e0b;">Rs. {{ formatCurrency(debt.total_amount - debt.paid_amount) }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <TransactionModal :isOpen="isModalOpen" @close="isModalOpen = false" @saved="fetchData" />
@@ -314,6 +351,7 @@ const transactions = ref([])
 const ytdIncome = ref([])
 const upcomingSubscriptions = ref([])
 const allSubscriptions = ref([])
+const upcomingDebts = ref([])
 
 const now = new Date()
 const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -370,6 +408,10 @@ const totalSubscriptionsLKR = computed(() => {
     }
     return acc + sub.amount
   }, 0)
+})
+
+const totalUpcomingDebtsLKR = computed(() => {
+  return upcomingDebts.value.reduce((acc, debt) => acc + (debt.total_amount - debt.paid_amount), 0)
 })
 
 // Chart Data
@@ -496,6 +538,27 @@ const fetchData = async () => {
       if (diffB < 0) diffB += 30
       return diffA - diffB
     })
+  }
+
+  // Fetch debts for upcoming
+  const { data: debtsData } = await supabase
+    .from('debts')
+    .select('*')
+    .eq('user_id', user.value.id)
+    .neq('status', 'completed')
+    .not('due_date', 'is', null)
+
+  if (debtsData) {
+    const todayDate = new Date()
+    todayDate.setHours(0,0,0,0)
+    
+    upcomingDebts.value = debtsData.filter(debt => {
+      if (!debt.due_date) return false
+      const dueDate = new Date(debt.due_date)
+      const diffTime = dueDate - todayDate
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays <= 7
+    }).sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
   }
 
   loading.value = false

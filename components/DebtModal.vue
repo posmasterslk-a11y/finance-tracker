@@ -17,6 +17,11 @@
           <input type="number" v-model="form.total_amount" step="0.01" min="0" required placeholder="0.00" />
         </div>
 
+        <div v-if="!isPaymentMode">
+          <label>Return Date (Due Date)</label>
+          <input type="date" v-model="form.due_date" />
+        </div>
+
         <!-- Payment Mode specific fields -->
         <div v-if="isPaymentMode">
           <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
@@ -29,7 +34,7 @@
         </div>
 
         <div>
-          <label>Date</label>
+          <label>Date Added / Payment Date</label>
           <input type="date" v-model="form.date" required />
         </div>
 
@@ -63,7 +68,8 @@ const form = ref({
   name: '',
   total_amount: '',
   payment_amount: '',
-  date: new Date().toISOString().split('T')[0]
+  date: new Date().toISOString().split('T')[0],
+  due_date: ''
 })
 
 const loading = ref(false)
@@ -78,6 +84,7 @@ watch(() => props.isOpen, (newVal) => {
     form.value.total_amount = ''
     form.value.payment_amount = ''
     form.value.date = new Date().toISOString().split('T')[0]
+    form.value.due_date = ''
   }
 })
 
@@ -137,13 +144,19 @@ const submitForm = async () => {
     }
   } else {
     // Add New Debt
-    const { error } = await supabase.from('debts').insert({
+    const insertData = {
       user_id: user.value.id,
       name: form.value.name,
       total_amount: parseFloat(form.value.total_amount),
       paid_amount: 0,
       status: 'active'
-    })
+    }
+    
+    if (form.value.due_date) {
+      insertData.due_date = form.value.due_date
+    }
+
+    const { error } = await supabase.from('debts').insert(insertData)
 
     if (error) {
       errorMsg.value = error.message
