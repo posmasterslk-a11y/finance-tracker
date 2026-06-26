@@ -13,20 +13,20 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
           <div>
             <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">My Debts</h2>
-            <div v-if="debts.length > 0" style="display: flex; gap: 1.5rem; font-size: 0.875rem;">
-              <span style="color: var(--text-secondary);">Total Debt: <strong class="text-danger">Rs. {{ formatCurrency(totalDebtOwed) }}</strong></span>
-              <span style="color: var(--text-secondary);">Total Paid: <strong class="text-success">Rs. {{ formatCurrency(totalDebtPaid) }}</strong></span>
-              <span style="color: var(--text-secondary);">Remaining: <strong style="color: var(--text);">Rs. {{ formatCurrency(totalDebtOwed - totalDebtPaid) }}</strong></span>
+            <div v-if="borrowedDebts.length > 0" style="display: flex; gap: 1.5rem; font-size: 0.875rem;">
+              <span style="color: var(--text-secondary);">Total Debt: <strong class="text-danger">Rs. {{ formatCurrency(totalBorrowedOwed) }}</strong></span>
+              <span style="color: var(--text-secondary);">Total Paid: <strong class="text-success">Rs. {{ formatCurrency(totalBorrowedPaid) }}</strong></span>
+              <span style="color: var(--text-secondary);">Remaining: <strong style="color: var(--text);">Rs. {{ formatCurrency(totalBorrowedOwed - totalBorrowedPaid) }}</strong></span>
             </div>
           </div>
-          <button @click="openAddDebtModal" class="btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">+ Add Debt</button>
+          <button @click="openAddDebtModal('borrowed')" class="btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">+ Add Debt</button>
         </div>
 
-        <div v-if="debts.length === 0" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+        <div v-if="borrowedDebts.length === 0" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
           No active debts found.
         </div>
         <div v-else style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
-          <div v-for="debt in debts" :key="debt.id" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+          <div v-for="debt in borrowedDebts" :key="debt.id" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
               <strong style="font-size: 1.1rem;">{{ debt.name }}</strong>
               <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
@@ -42,7 +42,7 @@
             <div style="width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 1rem; overflow: hidden;">
               <div :style="`width: ${Math.min((debt.paid_amount / debt.total_amount) * 100, 100)}%; background: var(--success); height: 100%;`"></div>
             </div>
-            <button v-if="debt.status !== 'completed'" @click="openPayDebtModal(debt)" class="btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-bottom: 0.5rem;">Make Payment</button>
+            <button v-if="debt.status !== 'completed'" @click="openPayDebtModal(debt, 'borrowed')" class="btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-bottom: 0.5rem;">Make Payment</button>
             
             <!-- History Toggle -->
             <button @click="toggleHistory(debt.id)" style="width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
@@ -54,6 +54,64 @@
               <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Payment History</h4>
               <div v-if="getDebtPayments(debt.id).length === 0" style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">
                 No payments made yet.
+              </div>
+              <ul v-else style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
+                <li v-for="pay in getDebtPayments(debt.id)" :key="pay.id" style="display: flex; justify-content: space-between; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">
+                  <span style="color: var(--text-secondary);">{{ new Date(pay.date).toLocaleDateString() }}</span>
+                  <strong class="text-success">Rs. {{ formatCurrency(pay.amount) }}</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Money Lent Section -->
+      <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Money Lent (Owed to Me)</h2>
+            <div v-if="lentDebts.length > 0" style="display: flex; gap: 1.5rem; font-size: 0.875rem;">
+              <span style="color: var(--text-secondary);">Total Lent: <strong class="text-danger">Rs. {{ formatCurrency(totalLentOwed) }}</strong></span>
+              <span style="color: var(--text-secondary);">Total Received: <strong class="text-success">Rs. {{ formatCurrency(totalLentPaid) }}</strong></span>
+              <span style="color: var(--text-secondary);">Remaining: <strong style="color: var(--text);">Rs. {{ formatCurrency(totalLentOwed - totalLentPaid) }}</strong></span>
+            </div>
+          </div>
+          <button @click="openAddDebtModal('lent')" class="btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">+ Add Loan Given</button>
+        </div>
+
+        <div v-if="lentDebts.length === 0" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+          No active loans found.
+        </div>
+        <div v-else style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+          <div v-for="debt in lentDebts" :key="debt.id" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <strong style="font-size: 1.1rem;">{{ debt.name }}</strong>
+              <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
+            </div>
+            <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+              Total Lent: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
+              Received: <strong class="text-success">Rs. {{ debt.paid_amount.toLocaleString() }}</strong> <br>
+              Balance: <strong style="color: var(--text);">Rs. {{ (debt.total_amount - debt.paid_amount).toLocaleString() }}</strong> <br>
+              <span v-if="debt.due_date" style="display: inline-block; margin-top: 0.5rem; color: #f59e0b;">
+                Return Date: <strong>{{ new Date(debt.due_date).toLocaleDateString() }}</strong>
+              </span>
+            </div>
+            <div style="width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 1rem; overflow: hidden;">
+              <div :style="`width: ${Math.min((debt.paid_amount / debt.total_amount) * 100, 100)}%; background: var(--success); height: 100%;`"></div>
+            </div>
+            <button v-if="debt.status !== 'completed'" @click="openPayDebtModal(debt, 'lent')" class="btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-bottom: 0.5rem;">Receive Payment</button>
+            
+            <!-- History Toggle -->
+            <button @click="toggleHistory(debt.id)" style="width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+              {{ expandedHistory === debt.id ? 'Hide History' : 'View History' }}
+            </button>
+
+            <!-- History Dropdown -->
+            <div v-if="expandedHistory === debt.id" style="margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+              <h4 style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Payment History</h4>
+              <div v-if="getDebtPayments(debt.id).length === 0" style="font-size: 0.8rem; color: var(--text-secondary); font-style: italic;">
+                No payments received yet.
               </div>
               <ul v-else style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem;">
                 <li v-for="pay in getDebtPayments(debt.id)" :key="pay.id" style="display: flex; justify-content: space-between; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 4px;">
@@ -135,7 +193,7 @@
     </div>
 
     <TransactionModal :isOpen="isModalOpen" :editData="editingTransaction" forcedCategory="personal" @close="closeModal" @saved="fetchData" />
-    <DebtModal :isOpen="isDebtModalOpen" :paymentDebt="paymentDebtData" @close="closeDebtModal" @saved="fetchData" />
+    <DebtModal :isOpen="isDebtModalOpen" :paymentDebt="paymentDebtData" :debtType="currentDebtType" @close="closeDebtModal" @saved="fetchData" />
   </div>
 </template>
 
@@ -150,6 +208,7 @@ const editingTransaction = ref(null)
 
 const isDebtModalOpen = ref(false)
 const paymentDebtData = ref(null)
+const currentDebtType = ref('borrowed')
 
 const loading = ref(true)
 const transactions = ref([])
@@ -197,13 +256,15 @@ const getDebtPayments = (debtId) => {
   return debtPayments.value.filter(p => p.debt_id === debtId)
 }
 
-const openAddDebtModal = () => {
+const openAddDebtModal = (type = 'borrowed') => {
   paymentDebtData.value = null
+  currentDebtType.value = type
   isDebtModalOpen.value = true
 }
 
-const openPayDebtModal = (debt) => {
+const openPayDebtModal = (debt, type = 'borrowed') => {
   paymentDebtData.value = debt
+  currentDebtType.value = type
   isDebtModalOpen.value = true
 }
 
@@ -217,8 +278,14 @@ const formatCurrency = (val) => {
   return Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-const totalDebtOwed = computed(() => debts.value.reduce((acc, d) => acc + Number(d.total_amount), 0))
-const totalDebtPaid = computed(() => debts.value.reduce((acc, d) => acc + Number(d.paid_amount), 0))
+const borrowedDebts = computed(() => debts.value.filter(d => d.type !== 'lent'))
+const lentDebts = computed(() => debts.value.filter(d => d.type === 'lent'))
+
+const totalBorrowedOwed = computed(() => borrowedDebts.value.reduce((acc, d) => acc + Number(d.total_amount), 0))
+const totalBorrowedPaid = computed(() => borrowedDebts.value.reduce((acc, d) => acc + Number(d.paid_amount), 0))
+
+const totalLentOwed = computed(() => lentDebts.value.reduce((acc, d) => acc + Number(d.total_amount), 0))
+const totalLentPaid = computed(() => lentDebts.value.reduce((acc, d) => acc + Number(d.paid_amount), 0))
 
 const openEditModal = (t) => {
   editingTransaction.value = t

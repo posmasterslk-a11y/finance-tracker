@@ -2,18 +2,18 @@
   <div class="modal-overlay" v-if="isOpen" @click.self="closeModal">
     <div class="modal-content glass-panel">
       <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">
-        {{ isPaymentMode ? 'Pay Debt' : 'Add New Debt' }}
+        {{ isPaymentMode ? (props.debtType === 'lent' ? 'Receive Payment' : 'Pay Debt') : (props.debtType === 'lent' ? 'New Loan Given' : 'Add New Debt') }}
       </h3>
       
       <form @submit.prevent="submitForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
         
         <div v-if="!isPaymentMode">
-          <label>Debt Name (e.g., Car Loan, Friend)</label>
-          <input type="text" v-model="form.name" required placeholder="Enter debt name" />
+          <label>{{ props.debtType === 'lent' ? "Person / Name (e.g., Friend's Name)" : "Debt Name (e.g., Car Loan, Friend)" }}</label>
+          <input type="text" v-model="form.name" required placeholder="Enter name" />
         </div>
 
         <div v-if="!isPaymentMode">
-          <label>Total Amount Owed (Rs.)</label>
+          <label>{{ props.debtType === 'lent' ? 'Total Amount Lent (Rs.)' : 'Total Amount Owed (Rs.)' }}</label>
           <input type="number" v-model="form.total_amount" step="0.01" min="0" required placeholder="0.00" />
         </div>
 
@@ -25,11 +25,11 @@
         <!-- Payment Mode specific fields -->
         <div v-if="isPaymentMode">
           <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-            Paying towards: <strong style="color: var(--text);">{{ paymentDebt?.name }}</strong><br />
+            {{ props.debtType === 'lent' ? 'Receiving from:' : 'Paying towards:' }} <strong style="color: var(--text);">{{ paymentDebt?.name }}</strong><br />
             Remaining Balance: <strong class="text-danger">Rs. {{ (paymentDebt?.total_amount - paymentDebt?.paid_amount).toFixed(2) }}</strong>
           </div>
           
-          <label>Payment Amount (Rs.)</label>
+          <label>{{ props.debtType === 'lent' ? 'Received Amount (Rs.)' : 'Payment Amount (Rs.)' }}</label>
           <input type="number" v-model="form.payment_amount" step="0.01" min="0" :max="paymentDebt?.total_amount - paymentDebt?.paid_amount" required placeholder="0.00" />
         </div>
 
@@ -41,7 +41,7 @@
         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
           <button type="button" @click="closeModal" class="btn-danger" style="flex: 1;">Cancel</button>
           <button type="submit" class="btn-primary" :disabled="loading" style="flex: 1;">
-            {{ loading ? 'Saving...' : (isPaymentMode ? 'Make Payment' : 'Save Debt') }}
+            {{ loading ? 'Saving...' : (isPaymentMode ? (props.debtType === 'lent' ? 'Collect Payment' : 'Make Payment') : (props.debtType === 'lent' ? 'Save Loan' : 'Save Debt')) }}
           </button>
         </div>
         <p v-if="errorMsg" class="text-danger">{{ errorMsg }}</p>
@@ -56,6 +56,10 @@ const props = defineProps({
   paymentDebt: {
     type: Object,
     default: null
+  },
+  debtType: {
+    type: String,
+    default: 'borrowed'
   }
 })
 
@@ -100,10 +104,10 @@ const submitForm = async () => {
     // 1. Log Transaction
     const { error: txError } = await supabase.from('transactions').insert({
       user_id: user.value.id,
-      type: 'expense',
+      type: props.debtType === 'lent' ? 'income' : 'expense',
       category: 'personal',
       amount: parseFloat(form.value.payment_amount),
-      description: `Debt Payment - ${props.paymentDebt.name}`,
+      description: props.debtType === 'lent' ? `Loan Repayment Received - ${props.paymentDebt.name}` : `Debt Payment - ${props.paymentDebt.name}`,
       date: form.value.date
     })
 
@@ -149,7 +153,8 @@ const submitForm = async () => {
       name: form.value.name,
       total_amount: parseFloat(form.value.total_amount),
       paid_amount: 0,
-      status: 'active'
+      status: 'active',
+      type: props.debtType
     }
     
     if (form.value.due_date) {

@@ -545,6 +545,7 @@ const fetchData = async () => {
     .from('debts')
     .select('*')
     .eq('user_id', user.value.id)
+    .eq('type', 'lent')
     .neq('status', 'completed')
     .not('due_date', 'is', null)
 
