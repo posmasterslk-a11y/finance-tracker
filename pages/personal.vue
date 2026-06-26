@@ -12,18 +12,18 @@
       <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
           <div>
-            <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">My Debts</h2>
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Money Lent (Owed to Me)</h2>
             <div v-if="debts.length > 0" style="display: flex; gap: 1.5rem; font-size: 0.875rem;">
-              <span style="color: var(--text-secondary);">Total Debt: <strong class="text-danger">Rs. {{ formatCurrency(totalDebtOwed) }}</strong></span>
-              <span style="color: var(--text-secondary);">Total Paid: <strong class="text-success">Rs. {{ formatCurrency(totalDebtPaid) }}</strong></span>
+              <span style="color: var(--text-secondary);">Total Lent: <strong class="text-danger">Rs. {{ formatCurrency(totalDebtOwed) }}</strong></span>
+              <span style="color: var(--text-secondary);">Total Received: <strong class="text-success">Rs. {{ formatCurrency(totalDebtPaid) }}</strong></span>
               <span style="color: var(--text-secondary);">Remaining: <strong style="color: var(--text);">Rs. {{ formatCurrency(totalDebtOwed - totalDebtPaid) }}</strong></span>
             </div>
           </div>
-          <button @click="openAddDebtModal" class="btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">+ Add Debt</button>
+          <button @click="openAddDebtModal" class="btn-primary" style="font-size: 0.875rem; padding: 0.5rem 1rem;">+ Add Loan</button>
         </div>
 
         <div v-if="debts.length === 0" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
-          No active debts found.
+          No active loans found.
         </div>
         <div v-else style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
           <div v-for="debt in debts" :key="debt.id" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
@@ -32,8 +32,8 @@
               <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
             </div>
             <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
-              Total: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
-              Paid: <strong class="text-success">Rs. {{ debt.paid_amount.toLocaleString() }}</strong> <br>
+              Total Lent: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
+              Received: <strong class="text-success">Rs. {{ debt.paid_amount.toLocaleString() }}</strong> <br>
               Balance: <strong style="color: var(--text);">Rs. {{ (debt.total_amount - debt.paid_amount).toLocaleString() }}</strong> <br>
               <span v-if="debt.due_date" style="display: inline-block; margin-top: 0.5rem; color: #f59e0b;">
                 Return Date: <strong>{{ new Date(debt.due_date).toLocaleDateString() }}</strong>
@@ -42,7 +42,7 @@
             <div style="width: 100%; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-bottom: 1rem; overflow: hidden;">
               <div :style="`width: ${Math.min((debt.paid_amount / debt.total_amount) * 100, 100)}%; background: var(--success); height: 100%;`"></div>
             </div>
-            <button v-if="debt.status !== 'completed'" @click="openPayDebtModal(debt)" class="btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-bottom: 0.5rem;">Make Payment</button>
+            <button v-if="debt.status !== 'completed'" @click="openPayDebtModal(debt)" class="btn-primary" style="width: 100%; padding: 0.5rem; font-size: 0.9rem; margin-bottom: 0.5rem;">Receive Payment</button>
             
             <!-- History Toggle -->
             <button @click="toggleHistory(debt.id)" style="width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--text-secondary); padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
