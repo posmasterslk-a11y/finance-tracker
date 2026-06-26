@@ -496,7 +496,13 @@ const fetchData = async () => {
     .order('date', { ascending: false })
 
   if (data) {
-    transactions.value = data
+    transactions.value = data.filter(t => {
+      const desc = t.description || ''
+      return !desc.startsWith('Money Borrowed From -') &&
+             !desc.startsWith('Debt Payment -') &&
+             !desc.startsWith('Loan Given To -') &&
+             !desc.startsWith('Loan Repayment Received -')
+    })
   }
 
   // Fetch YTD Income data (from earliest selected year)
@@ -511,7 +517,13 @@ const fetchData = async () => {
     .order('date', { ascending: true })
 
   if (ytdData) {
-    ytdIncome.value = ytdData
+    ytdIncome.value = ytdData.filter(t => {
+      const desc = t.description || ''
+      return !desc.startsWith('Money Borrowed From -') &&
+             !desc.startsWith('Debt Payment -') &&
+             !desc.startsWith('Loan Given To -') &&
+             !desc.startsWith('Loan Repayment Received -')
+    })
   }
 
   // Now update charts based on all fetched data
@@ -580,7 +592,13 @@ const fetchTrendData = async () => {
     .order('date', { ascending: true })
 
   if (ytdData) {
-    ytdIncome.value = ytdData
+    ytdIncome.value = ytdData.filter(t => {
+      const desc = t.description || ''
+      return !desc.startsWith('Money Borrowed From -') &&
+             !desc.startsWith('Debt Payment -') &&
+             !desc.startsWith('Loan Given To -') &&
+             !desc.startsWith('Loan Repayment Received -')
+    })
   }
   
   updateCharts()
