@@ -27,9 +27,14 @@
         </div>
         <div v-else style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
           <div v-for="debt in borrowedDebts" :key="debt.id" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: flex-start;">
               <strong style="font-size: 1.1rem;">{{ debt.name }}</strong>
-              <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
+                <button @click="deleteDebt(debt.id)" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; display: flex;" title="Delete">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
             </div>
             <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
               Total: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
@@ -85,9 +90,14 @@
         </div>
         <div v-else style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
           <div v-for="debt in lentDebts" :key="debt.id" style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: flex-start;">
               <strong style="font-size: 1.1rem;">{{ debt.name }}</strong>
-              <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span :class="debt.status === 'completed' ? 'text-success' : 'text-danger'" style="text-transform: capitalize; font-size: 0.8rem; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1);">{{ debt.status === 'completed' ? 'Paid Off' : 'Active' }}</span>
+                <button @click="deleteDebt(debt.id)" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; display: flex;" title="Delete">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
             </div>
             <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
               Total Lent: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
@@ -302,6 +312,19 @@ const deleteTransaction = async (id) => {
   
   loading.value = true
   const { error } = await supabase.from('transactions').delete().eq('id', id)
+  if (!error) {
+    fetchData()
+  } else {
+    loading.value = false
+    alert('Failed to delete: ' + error.message)
+  }
+}
+
+const deleteDebt = async (id) => {
+  if (!confirm('Are you sure you want to delete this? This will also remove its payment history.')) return
+  
+  loading.value = true
+  const { error } = await supabase.from('debts').delete().eq('id', id)
   if (!error) {
     fetchData()
   } else {
