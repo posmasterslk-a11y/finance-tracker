@@ -498,10 +498,10 @@ const fetchData = async () => {
   if (data) {
     transactions.value = data.filter(t => {
       const desc = t.description || ''
-      return !desc.startsWith('Money Borrowed From -') &&
-             !desc.startsWith('Debt Payment -') &&
-             !desc.startsWith('Loan Given To -') &&
-             !desc.startsWith('Loan Repayment Received -')
+      return !desc.startsWith('Money Borrowed') &&
+             !desc.startsWith('Debt Payment') &&
+             !desc.startsWith('Loan Given') &&
+             !desc.startsWith('Loan Repayment')
     })
   }
 
@@ -519,10 +519,10 @@ const fetchData = async () => {
   if (ytdData) {
     ytdIncome.value = ytdData.filter(t => {
       const desc = t.description || ''
-      return !desc.startsWith('Money Borrowed From -') &&
-             !desc.startsWith('Debt Payment -') &&
-             !desc.startsWith('Loan Given To -') &&
-             !desc.startsWith('Loan Repayment Received -')
+      return !desc.startsWith('Money Borrowed') &&
+             !desc.startsWith('Debt Payment') &&
+             !desc.startsWith('Loan Given') &&
+             !desc.startsWith('Loan Repayment')
     })
   }
 
@@ -594,10 +594,10 @@ const fetchTrendData = async () => {
   if (ytdData) {
     ytdIncome.value = ytdData.filter(t => {
       const desc = t.description || ''
-      return !desc.startsWith('Money Borrowed From -') &&
-             !desc.startsWith('Debt Payment -') &&
-             !desc.startsWith('Loan Given To -') &&
-             !desc.startsWith('Loan Repayment Received -')
+      return !desc.startsWith('Money Borrowed') &&
+             !desc.startsWith('Debt Payment') &&
+             !desc.startsWith('Loan Given') &&
+             !desc.startsWith('Loan Repayment')
     })
   }
   
