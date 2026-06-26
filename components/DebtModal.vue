@@ -17,7 +17,7 @@
           <input type="number" v-model="form.total_amount" step="0.01" min="0" required placeholder="0.00" />
         </div>
 
-        <div v-if="!isPaymentMode">
+        <div v-if="!isPaymentMode && props.debtType === 'lent'">
           <label>Return Date (Due Date)</label>
           <input type="date" v-model="form.due_date" />
         </div>
