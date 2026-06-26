@@ -166,6 +166,16 @@ const submitForm = async () => {
     if (error) {
       errorMsg.value = error.message
     } else {
+      // Log initial transaction
+      await supabase.from('transactions').insert({
+        user_id: user.value.id,
+        type: props.debtType === 'lent' ? 'expense' : 'income',
+        category: 'personal',
+        amount: parseFloat(form.value.total_amount),
+        description: props.debtType === 'lent' ? `Loan Given To - ${form.value.name}` : `Money Borrowed From - ${form.value.name}`,
+        date: form.value.date
+      })
+      
       emit('saved')
       closeModal()
     }
