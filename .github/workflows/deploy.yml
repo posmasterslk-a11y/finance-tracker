@@ -26,10 +26,10 @@ jobs:
         npm install
       
     - name: 🔨 Build Project
-      env:
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      run: npm run generate
+      run: |
+        echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env
+        echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env
+        npm run generate
       
     - name: 📂 Sync files to cPanel
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
