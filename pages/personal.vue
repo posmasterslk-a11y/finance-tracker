@@ -37,6 +37,7 @@
               </div>
             </div>
             <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+              Date Borrowed: <strong>{{ new Date(debt.created_at).toLocaleDateString() }}</strong> <br>
               Total: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
               Paid: <strong class="text-success">Rs. {{ debt.paid_amount.toLocaleString() }}</strong> <br>
               Balance: <strong style="color: var(--text);">Rs. {{ (debt.total_amount - debt.paid_amount).toLocaleString() }}</strong> <br>
@@ -100,6 +101,7 @@
               </div>
             </div>
             <div style="margin-bottom: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+              Date Lent: <strong>{{ new Date(debt.created_at).toLocaleDateString() }}</strong> <br>
               Total Lent: <strong>Rs. {{ debt.total_amount.toLocaleString() }}</strong> <br>
               Received: <strong class="text-success">Rs. {{ debt.paid_amount.toLocaleString() }}</strong> <br>
               Balance: <strong style="color: var(--text);">Rs. {{ (debt.total_amount - debt.paid_amount).toLocaleString() }}</strong> <br>
