@@ -76,7 +76,11 @@
 
         <div v-if="form.type === 'income'">
           <label>Revenue Month</label>
-          <input type="month" v-model="softwareRevenueMonth" required />
+          <select v-model="softwareRevenueMonth" required>
+            <option v-for="option in monthOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
           <small style="color: var(--text-secondary); font-size: 0.75rem;">This will update the dashboard chart for the selected month</small>
         </div>
         <div v-else>
@@ -124,6 +128,18 @@ const form = ref({
   transactionLabel: '',
   notes: '',
   date: new Date().toISOString().split('T')[0]
+})
+
+const monthOptions = computed(() => {
+  const options = []
+  const today = new Date()
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+    const label = d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    options.push({ label, value })
+  }
+  return options
 })
 
 const softwareRevenueMonth = ref(new Date().toISOString().substring(0, 7))
