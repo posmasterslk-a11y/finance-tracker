@@ -25,6 +25,11 @@
               <input type="date" v-model="customEndDate" class="modern-date-input" />
             </div>
           </div>
+          <select v-if="typeFilter === 'all' || typeFilter === 'income'" v-model="mainTypeFilter" class="modern-select">
+            <option value="all">All Revenue Types</option>
+            <option value="Software Revenue">Software Revenue</option>
+            <option value="Content Revenue">Content Revenue</option>
+          </select>
           <select v-model="labelFilter" class="modern-select">
             <option value="all">All Sub-Types</option>
             <option v-for="label in uniqueTransactionLabels" :key="label" :value="label">{{ label }}</option>
@@ -122,6 +127,7 @@ const transactions = ref([])
 // Filters and Pagination
 const searchQuery = ref('')
 const typeFilter = ref('all')
+const mainTypeFilter = ref('all')
 const labelFilter = ref('all')
 const dateFilter = ref('all')
 const customStartDate = ref('')
@@ -131,10 +137,11 @@ const itemsPerPage = 50
 
 watch(typeFilter, () => {
   labelFilter.value = 'all'
+  mainTypeFilter.value = 'all'
   currentPage.value = 1
 })
 
-watch([searchQuery, labelFilter, dateFilter, customStartDate, customEndDate], () => {
+watch([searchQuery, labelFilter, mainTypeFilter, dateFilter, customStartDate, customEndDate], () => {
   currentPage.value = 1
 })
 
@@ -186,6 +193,10 @@ const filteredTransactions = computed(() => {
 
   if (typeFilter.value !== 'all') {
     result = result.filter(t => t.type === typeFilter.value)
+  }
+  
+  if (mainTypeFilter.value !== 'all') {
+    result = result.filter(t => t.main_type === mainTypeFilter.value)
   }
   
   if (labelFilter.value !== 'all') {
