@@ -74,7 +74,12 @@
           </div>
         </div>
 
-        <div>
+        <div v-if="form.type === 'income'">
+          <label>Revenue Month</label>
+          <input type="month" v-model="softwareRevenueMonth" required />
+          <small style="color: var(--text-secondary); font-size: 0.75rem;">This will update the dashboard chart for the selected month</small>
+        </div>
+        <div v-else>
           <label>Date</label>
           <input type="date" v-model="form.date" required />
         </div>
@@ -119,6 +124,14 @@ const form = ref({
   transactionLabel: '',
   notes: '',
   date: new Date().toISOString().split('T')[0]
+})
+
+const softwareRevenueMonth = ref(new Date().toISOString().substring(0, 7))
+
+watch(softwareRevenueMonth, (newVal) => {
+  if (newVal) {
+    form.value.date = newVal + '-01'
+  }
 })
 
 const customLabel = ref('')
@@ -176,6 +189,10 @@ watch(() => props.isOpen, async (newVal) => {
       form.value.exchange_rate = props.editData.exchange_rate || ''
       form.value.main_type = props.editData.main_type || 'Content Revenue'
       form.value.date = props.editData.date
+      
+      if (form.value.type === 'income' && props.editData.date) {
+        softwareRevenueMonth.value = props.editData.date.substring(0, 7)
+      }
       
       // Attempt to split description back into label and notes
       let labelPart = props.editData.description
@@ -249,6 +266,7 @@ const closeModal = () => {
     notes: '',
     date: new Date().toISOString().split('T')[0]
   }
+  softwareRevenueMonth.value = new Date().toISOString().substring(0, 7)
 }
 
 const submitForm = async () => {
