@@ -470,7 +470,24 @@ const pieChartOptions = {
 const lineChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc' } } },
+  interaction: {
+    mode: 'index',
+    intersect: false,
+  },
+  plugins: { 
+    legend: { position: 'bottom', labels: { color: '#f8fafc' } },
+    tooltip: {
+      callbacks: {
+        footer: (tooltipItems) => {
+          let total = 0;
+          tooltipItems.forEach(item => {
+            total += item.parsed.y;
+          });
+          return 'Total: Rs ' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+    }
+  },
   scales: {
     y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8' } },
     x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
