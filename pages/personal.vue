@@ -160,11 +160,17 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             {{ showAllExpenses ? 'All Expenses' : 'Highest Expenses' }} for {{ new Date(selectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' }) }}
           </h3>
-          <button @click="showAllExpenses = !showAllExpenses" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
-            <svg v-if="!showAllExpenses" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-            {{ showAllExpenses ? 'Show Top 30 Only' : 'View All Expenses' }}
-          </button>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button @click="isChartModalOpen = true" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+              View Chart
+            </button>
+            <button @click="showAllExpenses = !showAllExpenses" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
+              <svg v-if="!showAllExpenses" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+              {{ showAllExpenses ? 'Show Top 30 Only' : 'View All Expenses' }}
+            </button>
+          </div>
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;" :style="showAllExpenses ? 'max-height: 400px; overflow-y: auto; padding-right: 0.5rem;' : ''">
           <div v-for="(expense, index) in displayedExpenses" :key="expense.id" style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger);">
@@ -262,6 +268,21 @@
 
     <TransactionModal :isOpen="isModalOpen" :editData="editingTransaction" forcedCategory="personal" @close="closeModal" @saved="fetchData" />
     <DebtModal :isOpen="isDebtModalOpen" :paymentDebt="paymentDebtData" :debtType="currentDebtType" @close="closeDebtModal" @saved="fetchData" />
+    
+    <!-- Chart Modal -->
+    <div v-if="isChartModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000;" @click.self="isChartModalOpen = false">
+      <div class="glass-panel" style="background: var(--bg-card); width: 90%; max-width: 600px; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h3 style="margin: 0; font-size: 1.25rem;">Expenses Breakdown</h3>
+          <button @click="isChartModalOpen = false" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem; line-height: 1; padding: 0;">&times;</button>
+        </div>
+        
+        <div style="height: 350px; display: flex; justify-content: center; align-items: center;">
+          <Pie v-if="expensePieChartData.labels.length > 0" :data="expensePieChartData" :options="pieChartOptions" style="max-height: 350px; width: 100%;" />
+          <div v-else style="color: var(--text-secondary);">No expense data available for this month.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -274,6 +295,7 @@ const supabase = useSupabaseClient()
 const user = useSupabaseUser()
 
 const isModalOpen = ref(false)
+const isChartModalOpen = ref(false)
 const editingTransaction = ref(null)
 
 const isDebtModalOpen = ref(false)
