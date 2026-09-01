@@ -166,15 +166,26 @@
             {{ showAllExpenses ? 'Show Top 3 Only' : 'View All Expenses' }}
           </button>
         </div>
-        <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));" :style="showAllExpenses ? 'max-height: 500px; overflow-y: auto; padding-right: 0.5rem;' : ''">
-          <div v-for="(expense, index) in displayedExpenses" :key="expense.id" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger);">
-            <div>
-              <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">#{{ index + 1 }}</span>
-              <strong style="display: block; font-size: 1.05rem; margin-top: 0.2rem; color: var(--text);">{{ expense.description }}</strong>
-              <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ new Date(expense.date).toLocaleDateString() }}</span>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;" :style="showAllExpenses ? 'max-height: 400px; overflow-y: auto; padding-right: 0.5rem;' : ''">
+          <div v-for="(expense, index) in displayedExpenses" :key="expense.id" style="background: rgba(0,0,0,0.2); padding: 0.75rem 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger);">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; min-width: 30px;">#{{ index + 1 }}</span>
+              <div>
+                <strong style="display: block; font-size: 1rem; color: var(--text);">{{ expense.description }}</strong>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ new Date(expense.date).toLocaleDateString() }}</span>
+              </div>
             </div>
-            <strong class="text-danger" style="font-size: 1.25rem;">Rs. {{ formatCurrency(expense.amount) }}</strong>
+            <strong class="text-danger" style="font-size: 1.1rem;">Rs. {{ formatCurrency(expense.amount) }}</strong>
           </div>
+        </div>
+        
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(239, 68, 68, 0.2); display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
+          <span style="font-size: 1rem; color: var(--text-secondary);">Total {{ showAllExpenses ? 'Expenses' : 'Top 3 Expenses' }} :</span>
+          <strong class="text-danger" style="font-size: 1.25rem;">Rs. {{ formatCurrency(displayedExpenses.reduce((sum, exp) => sum + exp.amount, 0)) }}</strong>
+        </div>
+        <div v-if="!showAllExpenses" style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+          <span style="font-size: 0.9rem; color: var(--text-secondary);">Total Monthly Expenses :</span>
+          <strong class="text-danger" style="font-size: 1.1rem;">Rs. {{ formatCurrency(totalMonthExpenses) }}</strong>
         </div>
       </div>
 
@@ -306,6 +317,10 @@ const allExpensesSorted = computed(() => {
   return filteredTransactions.value
     .filter(t => t.type === 'expense')
     .sort((a, b) => b.amount - a.amount)
+})
+
+const totalMonthExpenses = computed(() => {
+  return allExpensesSorted.value.reduce((sum, exp) => sum + exp.amount, 0)
 })
 
 const topExpenses = computed(() => {
