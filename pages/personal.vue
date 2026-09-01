@@ -270,16 +270,39 @@
     <DebtModal :isOpen="isDebtModalOpen" :paymentDebt="paymentDebtData" :debtType="currentDebtType" @close="closeDebtModal" @saved="fetchData" />
     
     <!-- Chart Modal -->
-    <div v-if="isChartModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000;" @click.self="isChartModalOpen = false">
-      <div class="glass-panel" style="background: var(--bg-card); width: 90%; max-width: 600px; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    <div v-if="isChartModalOpen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 1rem;" @click.self="isChartModalOpen = false">
+      <div class="glass-panel" style="background: var(--bg-card); width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
           <h3 style="margin: 0; font-size: 1.25rem;">Expenses Breakdown</h3>
           <button @click="isChartModalOpen = false" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.5rem; line-height: 1; padding: 0;">&times;</button>
         </div>
         
-        <div style="height: 350px; display: flex; justify-content: center; align-items: center;">
-          <Pie v-if="expensePieChartData.labels.length > 0" :data="expensePieChartData" :options="pieChartOptions" style="max-height: 350px; width: 100%;" />
-          <div v-else style="color: var(--text-secondary);">No expense data available for this month.</div>
+        <div style="display: flex; gap: 2rem; flex: 1; min-height: 0; flex-wrap: wrap; overflow-y: auto;">
+          <div style="flex: 1; min-width: 300px; display: flex; justify-content: center; align-items: center; min-height: 350px;">
+            <Pie v-if="expensePieChartData.labels.length > 0" :data="expensePieChartData" :options="pieChartOptions" style="max-height: 350px; width: 100%;" />
+            <div v-else style="color: var(--text-secondary);">No expense data available for this month.</div>
+          </div>
+          
+          <div style="flex: 1; min-width: 300px; max-height: 400px; overflow-y: auto; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">Narration</span>
+              <span style="font-weight: 600; color: var(--text-secondary); font-size: 0.9rem;">Amount</span>
+            </div>
+            <div v-for="expense in allExpensesSorted" :key="expense.id" style="display: flex; justify-content: space-between; padding: 0.6rem 0.8rem; background: rgba(0,0,0,0.2); border-radius: 6px;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 0.9rem;">{{ expense.description }}</span>
+                <span v-if="expense.count > 1" style="font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px; color: var(--text-secondary);">x{{ expense.count }}</span>
+              </div>
+              <strong class="text-danger" style="font-size: 0.95rem;">Rs. {{ formatCurrency(expense.amount) }}</strong>
+            </div>
+            <div v-if="allExpensesSorted.length === 0" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+              No expenses to show.
+            </div>
+            <div style="display: flex; justify-content: space-between; padding-top: 1rem; margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+              <strong style="color: var(--text);">Total</strong>
+              <strong class="text-danger" style="font-size: 1.15rem;">Rs. {{ formatCurrency(totalMonthExpenses) }}</strong>
+            </div>
+          </div>
         </div>
       </div>
     </div>
