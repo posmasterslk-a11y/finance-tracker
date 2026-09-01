@@ -163,7 +163,7 @@
           <button @click="showAllExpenses = !showAllExpenses" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--danger); padding: 0.4rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;">
             <svg v-if="!showAllExpenses" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
             <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-            {{ showAllExpenses ? 'Show Top 3 Only' : 'View All Expenses' }}
+            {{ showAllExpenses ? 'Show Top 30 Only' : 'View All Expenses' }}
           </button>
         </div>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;" :style="showAllExpenses ? 'max-height: 400px; overflow-y: auto; padding-right: 0.5rem;' : ''">
@@ -185,7 +185,7 @@
         </div>
         
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(239, 68, 68, 0.2); display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
-          <span style="font-size: 1rem; color: var(--text-secondary);">Total {{ showAllExpenses ? 'Expenses' : 'Top 3 Expenses' }} :</span>
+          <span style="font-size: 1rem; color: var(--text-secondary);">Total {{ showAllExpenses ? 'Expenses' : 'Top 30 Expenses' }} :</span>
           <strong class="text-danger" style="font-size: 1.25rem;">Rs. {{ formatCurrency(displayedExpenses.reduce((sum, exp) => sum + exp.amount, 0)) }}</strong>
         </div>
         <div v-if="!showAllExpenses" style="display: flex; justify-content: flex-end; align-items: center; gap: 1rem; margin-top: 0.5rem;">
@@ -349,7 +349,7 @@ const totalMonthExpenses = computed(() => {
 })
 
 const topExpenses = computed(() => {
-  return allExpensesSorted.value.slice(0, 3)
+  return allExpensesSorted.value.slice(0, 30)
 })
 
 const displayedExpenses = computed(() => {
