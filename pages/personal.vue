@@ -367,21 +367,23 @@ const allExpensesSorted = computed(() => {
   const expenses = filteredTransactions.value.filter(t => t.type === 'expense')
   
   const grouped = expenses.reduce((acc, t) => {
-    const desc = (t.description || 'Unknown').trim()
-    if (!acc[desc]) {
-      acc[desc] = {
-        id: desc, // use description as unique key
-        description: desc,
+    const descFull = (t.description || 'Unknown').trim()
+    const descGroup = descFull.split(' - ')[0].trim()
+    
+    if (!acc[descGroup]) {
+      acc[descGroup] = {
+        id: descGroup, // use group name as unique key
+        description: descGroup,
         amount: 0,
         date: t.date,
         count: 0
       }
     }
-    acc[desc].amount += t.amount
-    acc[desc].count += 1
+    acc[descGroup].amount += t.amount
+    acc[descGroup].count += 1
     
-    if (new Date(t.date) > new Date(acc[desc].date)) {
-      acc[desc].date = t.date
+    if (new Date(t.date) > new Date(acc[descGroup].date)) {
+      acc[descGroup].date = t.date
     }
     return acc
   }, {})
