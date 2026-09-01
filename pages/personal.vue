@@ -140,12 +140,33 @@
       <div class="glass-panel" style="padding: 1.5rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0; font-size: 1.1rem;">Transaction History</h3>
-        <div style="display: flex; gap: 1rem; align-items: center;">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="month" v-model="selectedMonth" style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); outline: none;" title="Filter by month" />
+            <button v-if="selectedMonth" @click="selectedMonth = ''" style="background: rgba(255,255,255,0.1); border: none; color: var(--text); cursor: pointer; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px;" title="Clear Month">✕</button>
+          </div>
           <input type="text" v-model="searchQuery" placeholder="Search description..." style="padding: 0.4rem 0.75rem; font-size: 0.85rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text); outline: none; width: 200px;" />
           <div style="display: flex; gap: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.25rem; border-radius: 8px;">
           <button @click="typeFilter = 'all'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'all' ? 'background: var(--primary);' : 'background: transparent;'">All</button>
           <button @click="typeFilter = 'income'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'income' ? 'background: var(--success);' : 'background: transparent;'">Income</button>
             <button @click="typeFilter = 'expense'" style="padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.85rem; border: none; color: var(--text); cursor: pointer;" :style="typeFilter === 'expense' ? 'background: var(--danger);' : 'background: transparent;'">Expense</button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="selectedMonth && topExpenses.length > 0" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--danger); display: flex; align-items: center; gap: 0.5rem;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          Highest Expenses for {{ new Date(selectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' }) }}
+        </h3>
+        <div style="display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+          <div v-for="(expense, index) in topExpenses" :key="expense.id" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--danger);">
+            <div>
+              <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Top {{ index + 1 }}</span>
+              <strong style="display: block; font-size: 1.05rem; margin-top: 0.2rem; color: var(--text);">{{ expense.description }}</strong>
+              <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ new Date(expense.date).toLocaleDateString() }}</span>
+            </div>
+            <strong class="text-danger" style="font-size: 1.25rem;">Rs. {{ formatCurrency(expense.amount) }}</strong>
           </div>
         </div>
       </div>
@@ -245,11 +266,20 @@ const expandedHistory = ref(null)
 // Filters and Pagination
 const searchQuery = ref('')
 const typeFilter = ref('all')
+const selectedMonth = ref('')
 const currentPage = ref(1)
 const itemsPerPage = 50
 
 const filteredTransactions = computed(() => {
   let result = transactions.value
+  
+  if (selectedMonth.value) {
+    const [year, month] = selectedMonth.value.split('-')
+    result = result.filter(t => {
+      const tDate = new Date(t.date)
+      return tDate.getFullYear() === parseInt(year) && tDate.getMonth() + 1 === parseInt(month)
+    })
+  }
   
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
@@ -263,6 +293,13 @@ const filteredTransactions = computed(() => {
   return result
 })
 
+const topExpenses = computed(() => {
+  return filteredTransactions.value
+    .filter(t => t.type === 'expense')
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 3)
+})
+
 const totalPages = computed(() => Math.ceil(filteredTransactions.value.length / itemsPerPage) || 1)
 
 const paginatedTransactions = computed(() => {
@@ -270,7 +307,7 @@ const paginatedTransactions = computed(() => {
   return filteredTransactions.value.slice(start, start + itemsPerPage)
 })
 
-watch([searchQuery, typeFilter], () => {
+watch([searchQuery, typeFilter, selectedMonth], () => {
   currentPage.value = 1
 })
 
