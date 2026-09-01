@@ -171,8 +171,13 @@
             <div style="display: flex; align-items: center; gap: 1rem;">
               <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; min-width: 30px;">#{{ index + 1 }}</span>
               <div>
-                <strong style="display: block; font-size: 1rem; color: var(--text);">{{ expense.description }}</strong>
-                <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ new Date(expense.date).toLocaleDateString() }}</span>
+                <strong style="display: flex; align-items: center; font-size: 1rem; color: var(--text);">
+                  {{ expense.description }}
+                  <span v-if="expense.count > 1" style="font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px; margin-left: 0.5rem; color: var(--text-secondary); white-space: nowrap;">
+                    {{ expense.count }} payments
+                  </span>
+                </strong>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">{{ expense.count > 1 ? 'Last payment: ' : '' }}{{ new Date(expense.date).toLocaleDateString() }}</span>
               </div>
             </div>
             <strong class="text-danger" style="font-size: 1.1rem;">Rs. {{ formatCurrency(expense.amount) }}</strong>
@@ -314,9 +319,29 @@ const filteredTransactions = computed(() => {
 const showAllExpenses = ref(false)
 
 const allExpensesSorted = computed(() => {
-  return filteredTransactions.value
-    .filter(t => t.type === 'expense')
-    .sort((a, b) => b.amount - a.amount)
+  const expenses = filteredTransactions.value.filter(t => t.type === 'expense')
+  
+  const grouped = expenses.reduce((acc, t) => {
+    const desc = (t.description || 'Unknown').trim()
+    if (!acc[desc]) {
+      acc[desc] = {
+        id: desc, // use description as unique key
+        description: desc,
+        amount: 0,
+        date: t.date,
+        count: 0
+      }
+    }
+    acc[desc].amount += t.amount
+    acc[desc].count += 1
+    
+    if (new Date(t.date) > new Date(acc[desc].date)) {
+      acc[desc].date = t.date
+    }
+    return acc
+  }, {})
+
+  return Object.values(grouped).sort((a, b) => b.amount - a.amount)
 })
 
 const totalMonthExpenses = computed(() => {
